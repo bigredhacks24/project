@@ -2,8 +2,22 @@ import { createClient } from "@/utils/supabase/server";
 import EventCard from "@/components/EventCard";
 import PersonCard from "@/components/PersonCard";
 import CirclesCard from "@/components/CirclesCard";
-import { EventAttendance, Group, Friend, Event } from "@/types/general-types";
+import { EventAttendance, Friend, Group } from "@/types/general-types";
+// import type { Database } from "@/types/database.types"; // Change this line
 
+// type EventAttendance = Database['public']['Tables']['event_person_attendance']['Row'];
+// type Friend = Database['public']['Tables']['person']['Row'];
+// type Group = Database['public']['Tables']['group']['Row'];
+
+interface EventWithAttendance {
+  event_id: string;
+  group_id: string | null;
+  name: string;
+  creation_timestamp: string;
+  start_timestamp: string;
+  end_timestamp: string;
+  event_person_attendance: { attending: boolean | null }[];
+}
 export default async function Home() {
   const supabase = createClient();
 
@@ -18,36 +32,17 @@ export default async function Home() {
   }
 
   // Fetch events
-  const { data: rawEvents, error: eventsError } = await supabase
+  const { data: events, error: eventsError } = await supabase
     .from("event")
     .select(
       `
       *,
       event_person_attendance (
         attending
-      ),
-      group (
-        group_id,
-        name
       )
     `
     )
     .eq("event_person_attendance.person_id", user.id);
-
-  // Transform raw events into EventAttendance type
-  const events: EventAttendance[] =
-    rawEvents?.map((rawEvent: any) => ({
-      event: {
-        event_id: rawEvent.event_id,
-        group_id: rawEvent.group_id,
-        name: rawEvent.name,
-        creation_timestamp: rawEvent.creation_timestamp,
-        start_timestamp: rawEvent.start_timestamp,
-        end_timestamp: rawEvent.end_timestamp,
-      },
-      group: rawEvent.group,
-      attending: rawEvent.event_person_attendance[0]?.attending ?? false,
-    })) || [];
 
   // Fetch friends
   const { data: friends, error: friendsError } = await supabase
@@ -79,11 +74,8 @@ export default async function Home() {
           </div>
           <div className="flex items-start gap-3 self-stretch">
             <div className="flex h-[313px] items-start gap-3 self-stretch">
-              {events.map((eventAttendance: EventAttendance) => (
-                <EventCard
-                  key={eventAttendance.event.event_id}
-                  eventAttendance={eventAttendance}
-                />
+              {events.map((event: EventWithAttendance) => (
+                <EventCard key={event.event_id} eventAttendance={event} />
               ))}
             </div>
           </div>

@@ -17,7 +17,7 @@ export async function GET(req: Request) {
       person:person_id(full_name, email)
     `
     )
-    .eq("person_id", !userId);
+    .eq("person_id", userId || "");
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -25,35 +25,6 @@ export async function GET(req: Request) {
 
   // Return full group and person details
   return NextResponse.json(data, { status: 200 });
-}
-
-// Deleting a group (remove a user from a group)
-export async function DELETE(req: Request) {
-  const supabase = createClient();
-  const { groupId, personId } = await req.json();
-
-  // Remove the person from the group
-  const { error } = await supabase
-    .from("group_person")
-    .delete()
-    .eq("group_id", groupId)
-    .eq("person_id", personId);
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  // Optional: Check if the group still has any members left, and delete the group if empty
-  const { data: groupMembers, error: memberError } = await supabase
-    .from("group_person")
-    .select("*")
-    .eq("group_id", groupId);
-
-  if (!memberError && groupMembers.length === 0) {
-    await supabase.from("group").delete().eq("group_id", groupId);
-  }
-
-  return NextResponse.json({ success: true }, { status: 200 });
 }
 
 /*
@@ -106,11 +77,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: groupError.message }, { status: 500 });
   }
 
-  // Insert group members
-  const groupPersonEntries = personIds.map((personId: string) => ({
-    group_id: newGroup.group_id,
-    person_id: personId,
-  }));
+  const groupPersonEntries = [
+    ...personIds.map((personId: string) => ({
+      group_id: newGroup.group_id,
+      person_id: personId,
+    })),
+    {
+      group_id: newGroup.group_id,
+      person_id: userId,
+    },
+  ];
 
   const { error: groupPersonError } = await supabase
     .from("group_person")
@@ -124,6 +100,37 @@ export async function POST(req: Request) {
   }
 
   return NextResponse.json({ success: true, group: newGroup }, { status: 201 });
+}
+
+// -----------------
+
+// Deleting a group (remove a user from a group)
+export async function DELETE(req: Request) {
+  const supabase = createClient();
+  const { groupId, personId } = await req.json();
+
+  // Remove the person from the group
+  const { error } = await supabase
+    .from("group_person")
+    .delete()
+    .eq("group_id", groupId)
+    .eq("person_id", personId);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // Optional: Check if the group still has any members left, and delete the group if empty
+  const { data: groupMembers, error: memberError } = await supabase
+    .from("group_person")
+    .select("*")
+    .eq("group_id", groupId);
+
+  if (!memberError && groupMembers.length === 0) {
+    await supabase.from("group").delete().eq("group_id", groupId);
+  }
+
+  return NextResponse.json({ success: true }, { status: 200 });
 }
 
 // Add a person to an existing group

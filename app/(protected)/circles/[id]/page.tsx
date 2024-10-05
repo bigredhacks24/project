@@ -3,9 +3,11 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import type { Database } from '@/types/database.types';
 import { Badge } from "@/components/ui/badge";
+import EventCard from "@/components/EventCard";
+import Spinner from "@/components/Spinner";
+import WeeklyCalendar from "@/components/WeeklyCalendar";
 
 type CircleData = Database['public']['Tables']['group']['Row'] & {
     members: { full_name: string; email: string; }[];
@@ -60,6 +62,7 @@ const dummyData: CirclePageData = {
         { date: "10/8", time: "5PM-7PM", title: "Past Event 5" },
         { date: "10/8", time: "5PM-7PM", title: "Past Event 5" },
         { date: "10/8", time: "5PM-7PM", title: "Past Event 5" },
+        { date: "10/8", time: "5PM-7PM", title: "Past Event 5" },
         { date: "10/8", time: "5PM-7PM", title: "Past Event 5" }
     ]
 };
@@ -69,6 +72,13 @@ export default function CirclePage() {
     const [circle, setCircle] = useState<CircleData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [pageData, setPageData] = useState<CirclePageData>(dummyData);
+    const [commonAvailability, setCommonAvailability] = useState<{ start: Date; end: Date; }[]>([
+        { start: new Date(2024, 9, 8, 10, 0), end: new Date(2024, 9, 8, 12, 0) },
+        { start: new Date(2024, 9, 9, 14, 0), end: new Date(2024, 9, 9, 16, 0) },
+        { start: new Date(2024, 9, 11, 9, 0), end: new Date(2024, 9, 11, 11, 0) },
+        { start: new Date(2024, 9, 12, 13, 0), end: new Date(2024, 9, 12, 15, 0) },
+        { start: new Date(2024, 9, 14, 15, 0), end: new Date(2024, 9, 14, 18, 0) },
+    ]);
 
     useEffect(() => {
         const fetchCircleData = async () => {
@@ -97,7 +107,7 @@ export default function CirclePage() {
     }, [id]);
 
     if (isLoading) {
-        return <div className="flex justify-center items-center">Loading...</div>;
+        return <Spinner />;
     }
 
     if (!circle) {
@@ -116,7 +126,7 @@ export default function CirclePage() {
                         </div>
 
 
-                        <div className="flex flex-col gap-y-4">
+                        <div className="flex flex-col gap-y-8">
                             <div>
                                 <h2 className="text-base font-semibold mb-2 uppercase">Upcoming Events</h2>
                                 <div className="mb-6">
@@ -134,7 +144,7 @@ export default function CirclePage() {
                             <div>
                                 <h2 className="text-base font-semibold mb-2 uppercase">Suggested Events</h2>
                                 {pageData.suggestedEvents.map((event, index) => (
-                                    <div key={index} className="flex items-center justify-between mb-2">
+                                    <div key={index} className="flex items-center justify-between space-y-1">
                                         <div className="flex items-center">
                                             <Badge className="bg-[#CACBCC] text-white mr-2">
                                                 <span className="text-xs">{`${event.date}, ${event.time}`}</span>
@@ -196,24 +206,35 @@ export default function CirclePage() {
                     <div className="lg:mt-[0.85rem]">
                         <h2 className="text-base font-semibold mb-2 uppercase">Availability Notifications</h2>
                         <div className="mb-6 flex justify-between items-center">
-                            <p className="font-medium text-base">{pageData.availabilityNotification}</p>
+                            <p className="font-light text-base">{pageData.availabilityNotification}</p>
                             <Button variant="link" className="p-0 h-auto text-[#B5B5B5]">Edit</Button>
                         </div>
 
                         <h2 className="text-base font-semibold mb-2 uppercase">Common Availability</h2>
-                        <Calendar className="mb-6" />
-
+                        <WeeklyCalendar startDate={new Date()} commonAvailability={commonAvailability} />
                     </div>
 
                 </div>
 
                 <div className="flex flex-col">
-                    <h3 className="text-2xl font-medium mb-2">Past Events</h3>
+                    <h3 className="text-2xl font-medium mb-4">Past Events</h3>
                     <div className="flex space-x-2 overflow-x-auto pb-4">
                         {pageData.pastEvents.map((event, index) => (
-                            <div key={index} className={`flex-shrink-0 w-24 h-24 rounded ${index === 0 ? 'bg-blue-500' : 'bg-gray-200'} flex items-end p-2`}>
-                                <span className="text-xs text-white">{`${event.date}, ${event.time}`}</span>
-                            </div>
+                            <EventCard key={index} eventAttendance={{
+                                event: {
+                                    event_id: index.toString(),
+                                    group_id: circle.group_id,
+                                    name: event.title,
+                                    creation_timestamp: "2024-01-01",
+                                    start_timestamp: "2024-01-01",
+                                    end_timestamp: "2024-01-01",
+                                },
+                                group: circle,
+                                attending: index === 0 ? true : false
+                            }} />
+                            // <div key={index} className={`flex-shrink-0 w-24 h-24 rounded ${index === 0 ? 'bg-blue-500' : 'bg-gray-200'} flex items-end p-2`}>
+                            //     <span className="text-xs text-white">{`${event.date}, ${event.time}`}</span>
+                            // </div>
                         ))}
                     </div>
                 </div>

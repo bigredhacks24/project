@@ -53,19 +53,18 @@ export default async function AuthButton() {
       <Link href="/playground" className="flex items-center">
         <span>Playground</span>
       </Link>
-      <Link href={`/profile/${user.id}`} className="flex items-center">
+      <form action={signOutAction}>
+        <Button type="submit" variant={"outline"}>
+          Sign out
+        </Button>
+      </form>
+      <Link href={`/profile`} className="flex items-center">
         <img
           src={user.user_metadata?.avatar_url || "https://picsum.photos/200/300"} // Use user's profile photo or a placeholder
           alt="Profile Photo"
           className="rounded-full w-10 h-10"
         />
       </Link>
-      <span>Hey, {user.email}!</span>
-      <form action={signOutAction}>
-        <Button type="submit" variant={"outline"}>
-          Sign out
-        </Button>
-      </form>
     </div>
   ) : (
     <div className="flex gap-2">

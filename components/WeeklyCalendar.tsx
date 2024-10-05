@@ -30,6 +30,12 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ startDate, commonAvaila
     // Clear canvas
     ctx.clearRect(0, 0, width, height);
 
+    // Draw "GMT-4" label
+    ctx.fillStyle = '#9C9C9C';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText('GMT-4', 12, 52);
+
     // Draw grid
     ctx.strokeStyle = '#e0e0e0';
     ctx.lineWidth = 1;
@@ -37,7 +43,7 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ startDate, commonAvaila
     // Vertical lines for days
     for (let i = 0; i <= 7; i++) {
       ctx.beginPath();
-      ctx.moveTo(leftPadding + i * dayWidth, 60);
+      ctx.moveTo(leftPadding + i * dayWidth, 50); // Extended 10px up
       ctx.lineTo(leftPadding + i * dayWidth, height);
       ctx.stroke();
     }
@@ -45,7 +51,7 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ startDate, commonAvaila
     // Horizontal lines for hours
     for (let i = 0; i <= hoursDisplayed; i++) {
       ctx.beginPath();
-      ctx.moveTo(leftPadding, 60 + i * hourHeight);
+      ctx.moveTo(leftPadding - 10, 60 + i * hourHeight); // Extended 10px left
       ctx.lineTo(width, 60 + i * hourHeight);
       ctx.stroke();
     }
@@ -60,10 +66,10 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ startDate, commonAvaila
       
       // Day of week
       ctx.font = '12px Arial';
-      ctx.fillText(days[i], leftPadding + i * dayWidth + dayWidth / 2, 20);
+      ctx.fillText(days[currentDate.getDay()], leftPadding + i * dayWidth + dayWidth / 2, 20);
       
       // Date number
-      ctx.font = 'bold 16px Arial';
+      ctx.font = 'bold 20px Arial';
       ctx.fillText(currentDate.getDate().toString(), leftPadding + i * dayWidth + dayWidth / 2, 45);
     }
 
@@ -73,39 +79,41 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ startDate, commonAvaila
     for (let i = 9; i <= 24; i++) {
       const hour = i % 12 || 12;
       const ampm = i < 12 ? 'AM' : 'PM';
-      ctx.fillText(`${hour}${ampm}`, leftPadding - 10, 75 + (i - 9) * hourHeight);
+      ctx.fillText(`${hour}${ampm}`, leftPadding - 15, 75 + (i - 9) * hourHeight);
     }
 
     // Draw availability blocks
     ctx.fillStyle = 'rgba(150, 150, 150, 0.5)';
     commonAvailability.forEach(block => {
-      const dayIndex = (block.start.getDay() - startDate.getDay() + 7) % 7;
-      const startHour = block.start.getHours();
-      const endHour = block.end.getHours();
-      
-      if (startHour >= 9 && endHour <= 24) {
-        const startY = 60 + (startHour - 9 + block.start.getMinutes() / 60) * hourHeight;
-        const endY = 60 + (endHour - 9 + block.end.getMinutes() / 60) * hourHeight;
+      const daysDiff = Math.floor((block.start.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysDiff >= 0 && daysDiff < 7) {
+        const startHour = block.start.getHours();
+        const endHour = block.end.getHours();
         
-        // Draw rounded rectangle
-        const radius = 5;
-        const x = leftPadding + dayIndex * dayWidth;
-        const y = startY;
-        const width = dayWidth;
-        const height = endY - startY;
-        
-        ctx.beginPath();
-        ctx.moveTo(x + radius, y);
-        ctx.lineTo(x + width - radius, y);
-        ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-        ctx.lineTo(x + width, y + height - radius);
-        ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-        ctx.lineTo(x + radius, y + height);
-        ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-        ctx.lineTo(x, y + radius);
-        ctx.quadraticCurveTo(x, y, x + radius, y);
-        ctx.closePath();
-        ctx.fill();
+        if (startHour >= 9 && endHour <= 24) {
+          const startY = 60 + (startHour - 9 + block.start.getMinutes() / 60) * hourHeight;
+          const endY = 60 + (endHour - 9 + block.end.getMinutes() / 60) * hourHeight;
+          
+          // Draw rounded rectangle
+          const radius = 5;
+          const x = leftPadding + daysDiff * dayWidth;
+          const y = startY;
+          const width = dayWidth;
+          const height = endY - startY;
+          
+          ctx.beginPath();
+          ctx.moveTo(x + radius, y);
+          ctx.lineTo(x + width - radius, y);
+          ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+          ctx.lineTo(x + width, y + height - radius);
+          ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+          ctx.lineTo(x + radius, y + height);
+          ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+          ctx.lineTo(x, y + radius);
+          ctx.quadraticCurveTo(x, y, x + radius, y);
+          ctx.closePath();
+          ctx.fill();
+        }
       }
     });
 

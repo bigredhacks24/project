@@ -73,11 +73,11 @@ export default function CirclePage() {
     const [isLoading, setIsLoading] = useState(true);
     const [pageData, setPageData] = useState<CirclePageData>(dummyData);
     const [commonAvailability, setCommonAvailability] = useState<{ start: Date; end: Date; }[]>([
-        { start: new Date(2024, 0, 8, 10, 0), end: new Date(2024, 0, 8, 12, 0) },
-        { start: new Date(2024, 0, 9, 14, 0), end: new Date(2024, 0, 9, 16, 0) },
-        { start: new Date(2024, 0, 11, 9, 0), end: new Date(2024, 0, 11, 11, 0) },
-        { start: new Date(2024, 0, 12, 13, 0), end: new Date(2024, 0, 12, 15, 0) },
-        { start: new Date(2024, 0, 14, 15, 0), end: new Date(2024, 0, 14, 18, 0) },
+        { start: new Date(2024, 9, 8, 10, 0), end: new Date(2024, 9, 8, 12, 0) },
+        { start: new Date(2024, 9, 9, 14, 0), end: new Date(2024, 9, 9, 16, 0) },
+        { start: new Date(2024, 9, 11, 9, 0), end: new Date(2024, 9, 11, 11, 0) },
+        { start: new Date(2024, 9, 12, 13, 0), end: new Date(2024, 9, 12, 15, 0) },
+        { start: new Date(2024, 9, 14, 15, 0), end: new Date(2024, 9, 14, 18, 0) },
     ]);
 
     useEffect(() => {
@@ -211,7 +211,7 @@ export default function CirclePage() {
                         </div>
 
                         <h2 className="text-base font-semibold mb-2 uppercase">Common Availability</h2>
-                        <WeeklyCalendar startDate={new Date(2024, 0, 8)} commonAvailability={commonAvailability} />
+                        <WeeklyCalendar startDate={new Date()} commonAvailability={commonAvailability} />
                     </div>
 
                 </div>

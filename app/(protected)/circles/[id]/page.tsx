@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import type { Database } from '@/types/database.types';
 import { Badge } from "@/components/ui/badge";
 import EventCard from "@/components/EventCard";
+import Spinner from "@/components/Spinner";
 
 type CircleData = Database['public']['Tables']['group']['Row'] & {
     members: { full_name: string; email: string; }[];
@@ -60,6 +61,7 @@ const dummyData: CirclePageData = {
         { date: "10/8", time: "5PM-7PM", title: "Past Event 5" },
         { date: "10/8", time: "5PM-7PM", title: "Past Event 5" },
         { date: "10/8", time: "5PM-7PM", title: "Past Event 5" },
+        { date: "10/8", time: "5PM-7PM", title: "Past Event 5" },
         { date: "10/8", time: "5PM-7PM", title: "Past Event 5" }
     ]
 };
@@ -97,7 +99,7 @@ export default function CirclePage() {
     }, [id]);
 
     if (isLoading) {
-        return <div className="flex justify-center items-center">Loading...</div>;
+        return <Spinner />;
     }
 
     if (!circle) {

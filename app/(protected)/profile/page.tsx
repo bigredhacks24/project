@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { createClient } from '@/utils/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import type { Database } from '@/types/database.types';
+import Spinner from "@/components/Spinner";
 
 type Person = Database['public']['Tables']['person']['Row'];
 
@@ -92,7 +93,7 @@ export default function ProfilePage() {
         }
     };
 
-    if (isLoading) return <div>Loading...</div>;
+    if (isLoading) return <Spinner />;
     if (!user || !profile) return <div>No user data found</div>;
     if (error) return <div>Error: {error}</div>;
 

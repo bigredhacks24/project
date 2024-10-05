@@ -52,51 +52,66 @@ export async function GET(req: NextRequest) {
   try {
     // Fetch calendar list
     const calendarList = await calendar.calendarList.list();
-    const calendars = calendarList.data.items;
+    const calendars = calendarList.data.items ?? [];
 
-    // Calculate time range (now to one week later)
-    const now = new Date();
-    const oneWeekLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    // Calculate time range (9 AM to midnight for the next 7 days)
+    const freePeriods = await getFreePeriods(calendar, calendars);
 
-    // Fetch busy periods
-    const freeBusyResponse = await calendar.freebusy.query({
-      requestBody: {
-        timeMin: now.toISOString(),
-        timeMax: oneWeekLater.toISOString(),
-        items: calendars?.map(calendar => ({ id: calendar.id })) || [],
-      },
-    });
-
-    const busyPeriods = formatBusyPeriods(freeBusyResponse.data.calendars);
-
-    return NextResponse.json({ calendars, busyPeriods });
+    return NextResponse.json({ calendars, freePeriods });
   } catch (error) {
     console.error('Error fetching calendar data:', error);
     return NextResponse.json({ error: 'Failed to fetch calendar data' }, { status: 500 });
   }
 }
 
-function formatBusyPeriods(calendars: any) {
+async function getFreePeriods(calendar: any, calendars: any[]) {
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const formattedPeriods: { [key: string]: string[]; } = {};
+  const freePeriods: { [key: string]: string[] } = {};
 
-  Object.values(calendars).forEach((calendar: any) => {
-    if (calendar.busy) {
-      calendar.busy.forEach((period: any) => {
-        const start = new Date(period.start);
-        const end = new Date(period.end);
-        const day = days[start.getDay()];
-        const timeString = `${formatTime(start)} - ${formatTime(end)}`;
+  for (let i = 0; i < 7; i++) {
+    const date = new Date();
+    date.setDate(date.getDate() + i);
+    const day = days[date.getDay()];
 
-        if (!formattedPeriods[day]) {
-          formattedPeriods[day] = [];
-        }
-        formattedPeriods[day].push(timeString);
-      });
+    const startTime = new Date(date.setHours(9, 0, 0, 0));
+    const endTime = new Date(date.setHours(23, 59, 59, 999));
+
+    const freeBusyResponse = await calendar.freebusy.query({
+      requestBody: {
+        timeMin: startTime.toISOString(),
+        timeMax: endTime.toISOString(),
+        items: calendars.map(calendar => ({ id: calendar.id })),
+      },
+    });
+
+    const busyPeriods = Object.values(freeBusyResponse.data.calendars)
+      .flatMap((cal: any) => cal.busy || [])
+      .sort((a: any, b: any) => new Date(a.start).getTime() - new Date(b.start).getTime());
+
+    const dayFreePeriods = getFreePeriodsBetweenBusy(startTime, endTime, busyPeriods);
+    freePeriods[day] = dayFreePeriods;
+  }
+
+  return freePeriods;
+}
+
+function getFreePeriodsBetweenBusy(start: Date, end: Date, busyPeriods: any[]) {
+  const freePeriods: string[] = [];
+  let currentTime = new Date(start);
+
+  for (const busy of busyPeriods) {
+    const busyStart = new Date(busy.start);
+    if (currentTime < busyStart) {
+      freePeriods.push(`${formatTime(currentTime)} - ${formatTime(busyStart)}`);
     }
-  });
+    currentTime = new Date(busy.end);
+  }
 
-  return formattedPeriods;
+  if (currentTime < end) {
+    freePeriods.push(`${formatTime(currentTime)} - ${formatTime(end)}`);
+  }
+
+  return freePeriods;
 }
 
 function formatTime(date: Date): string {

@@ -7,17 +7,12 @@ import { Calendar } from '@/types/calendar';
 import { createClient } from '@/utils/supabase/client';
 import type { User } from '@supabase/supabase-js';
 
-interface BusyPeriod {
-    start: string;
-    end: string;
-}
-
-interface FormattedBusyPeriods {
+interface FormattedFreePeriods {
     [day: string]: string[];
 }
 
 export default function GoogleCalendarComponent() {
-    const [busyPeriods, setBusyPeriods] = useState<FormattedBusyPeriods>({});
+    const [freePeriods, setFreePeriods] = useState<FormattedFreePeriods>({});
     const [calendars, setCalendars] = useState<Calendar[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -58,7 +53,7 @@ export default function GoogleCalendarComponent() {
                         throw new Error(data.error);
                     }
                     setCalendars(data.calendars);
-                    setBusyPeriods(data.busyPeriods);
+                    setFreePeriods(data.freePeriods);
                 } catch (err) {
                     setError('Failed to fetch calendar data');
                     console.error(err);
@@ -85,11 +80,16 @@ export default function GoogleCalendarComponent() {
                     {error && <div className="text-red-500">{error}</div>}
                 </div>
 
-                {Object.keys(busyPeriods).length > 0 && (
+                {Object.keys(freePeriods).length > 0 && (
                     <ul className="list-disc pl-5">
-                        {Object.entries(busyPeriods).map(([day, times]) => (
+                        {Object.entries(freePeriods).map(([day, times]) => (
                             <li key={day}>
-                                <strong>{day}:</strong> {times.join(', ')}
+                                <strong>{day}:</strong>
+                                <ul className="list-none pl-5">
+                                    {times.map((time, index) => (
+                                        <li key={index}>{time}</li>
+                                    ))}
+                                </ul>
                             </li>
                         ))}
                     </ul>

@@ -134,6 +134,8 @@ export default function GoogleCalendarComponent() {
             client_id: CLIENT_ID as string,
             scope: SCOPES,
             callback: '', // defined later
+            // for offline, persistent access, need to request consent
+            access_type: 'offline',
         });
         setTokenClient(tokenClient);
         setGisInited(true);

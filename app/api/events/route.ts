@@ -14,7 +14,7 @@ export async function GET(req: Request) {
     );
   }
 
-  // Fetch all events where the user is in event_person_attendance
+
   const { data: events, error } = await supabase
     .from("event_person_attendance")
     .select(

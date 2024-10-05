@@ -1,20 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Script from 'next/script';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from '@/types/calendar';
-
-const CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-const API_KEY = process.env.NEXT_PUBLIC_GCLOUD_API_KEY;
-const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
-const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar.freebusy';
-
-interface TokenClient {
-    callback: (resp: any) => void;
-    requestAccessToken: (options: { prompt: string; }) => void;
-}
 
 interface BusyPeriod {
     start: string;
@@ -25,143 +14,54 @@ interface FormattedBusyPeriods {
     [day: string]: string[];
 }
 
-interface CalendarList {
-    items: Calendar[];
-}
-
 export default function GoogleCalendarComponent() {
-    const [gapiInited, setGapiInited] = useState<boolean>(false);
-    const [gisInited, setGisInited] = useState<boolean>(false);
-    const [tokenClient, setTokenClient] = useState<TokenClient | null>(null);
     const [busyPeriods, setBusyPeriods] = useState<FormattedBusyPeriods>({});
-    const [accessToken, setAccessToken] = useState<string | null>(null);
-    const [refreshToken, setRefreshToken] = useState<string | null>(null);
     const [calendars, setCalendars] = useState<Calendar[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const handleAuthClick = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const response = await fetch('/api/google-auth');
+            const data = await response.json();
+            console.log(data);
+            if (data.url) {
+                window.location.href = data.url;
+            } else {
+                throw new Error('Authentication URL not received');
+            }
+        } catch (err) {
+            setError('Failed to initiate authentication');
+            console.error(err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
-        if (gapiInited && gisInited) {
-            initializeGapiClient();
-        }
-    }, [gapiInited, gisInited]);
-
-    const initializeGapiClient = async () => {
-        await gapi.client.init({
-            apiKey: API_KEY,
-            discoveryDocs: [DISCOVERY_DOC],
-        });
-    };
-
-    const fetchCalendarsAndBusyPeriods = async () => {
-        try {
-            // Fetch calendar list
-            const calendarListResponse = await gapi.client.request({
-                path: 'https://www.googleapis.com/calendar/v3/users/me/calendarList',
-                method: 'GET',
-            });
-
-            const calendarList = calendarListResponse.result.items;
-            setCalendars(calendarList);
-
-            // Calculate time range (now to one week later)
-            const now = new Date();
-            const oneWeekLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-            // Prepare freebusy query
-            const freeBusyResponse = await gapi.client.request({
-                path: 'https://www.googleapis.com/calendar/v3/freeBusy',
-                method: 'POST',
-                body: JSON.stringify({
-                    timeMin: now.toISOString(),
-                    timeMax: oneWeekLater.toISOString(),
-                    items: calendarList.map((calendar: Calendar) => ({ id: calendar.id }))
-                })
-            });
-
-            const allBusyPeriods: BusyPeriod[] = [];
-            Object.values(freeBusyResponse.result.calendars).forEach((calendar: any) => {
-                if (calendar.busy) {
-                    allBusyPeriods.push(...calendar.busy);
+        const fetchCalendarData = async () => {
+            setIsLoading(true);
+            setError(null);
+            try {
+                const response = await fetch('/api/calendar-data');
+                const data = await response.json();
+                if (data.error) {
+                    throw new Error(data.error);
                 }
-            });
-
-            const formattedBusyPeriods = formatBusyPeriods(allBusyPeriods);
-            setBusyPeriods(formattedBusyPeriods);
-        } catch (err) {
-            console.error('Error fetching calendars and busy periods:', err);
-        }
-    };
-
-    const handleAuthClick = () => {
-        if (!tokenClient) return;
-
-        tokenClient.callback = async (resp: any) => {
-            if (resp.error !== undefined) {
-                throw resp;
+                setCalendars(data.calendars);
+                setBusyPeriods(data.busyPeriods);
+            } catch (err) {
+                setError('Failed to fetch calendar data');
+                console.error(err);
+            } finally {
+                setIsLoading(false);
             }
-            setAccessToken(resp.access_token);
-            if (resp.refresh_token) {
-                setRefreshToken(resp.refresh_token);
-            }
-            await fetchCalendarsAndBusyPeriods();
         };
 
-        if (gapi.client.getToken() === null) {
-            tokenClient.requestAccessToken({ prompt: 'consent' });
-        } else {
-            tokenClient.requestAccessToken({ prompt: '' });
-        }
-    };
-
-    const handleSignoutClick = () => {
-        const token = gapi.client.getToken();
-        if (token !== null) {
-            google.accounts.id.revoke(token.access_token, () => {
-                console.log('Token revoked');
-                gapi.client.setToken(null);
-                setBusyPeriods({});
-                setAccessToken(null); // Clear the access token on sign out
-                setRefreshToken(null); // Clear the refresh token on sign out
-            });
-        }
-    };
-
-    const formatBusyPeriods = (periods: BusyPeriod[]): FormattedBusyPeriods => {
-        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const formattedPeriods: FormattedBusyPeriods = {};
-
-        periods.forEach(period => {
-            const start = new Date(period.start);
-            const end = new Date(period.end);
-            const day = days[start.getDay()];
-            const timeString = `${formatTime(start)} - ${formatTime(end)}`;
-
-            if (!formattedPeriods[day]) {
-                formattedPeriods[day] = [];
-            }
-            formattedPeriods[day].push(timeString);
-        });
-
-        return formattedPeriods;
-    };
-
-    const formatTime = (date: Date): string => {
-        return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    };
-
-    const handleGapiLoad = () => {
-        gapi.load('client', () => setGapiInited(true));
-    };
-    const handleGisLoad = () => {
-        const tokenClient = (google.accounts as any).oauth2.initTokenClient({
-            client_id: CLIENT_ID as string,
-            scope: SCOPES,
-            callback: '', // defined later
-            // for offline, persistent access, need to request consent
-            access_type: 'offline',
-        });
-        setTokenClient(tokenClient);
-        setGisInited(true);
-    };
+        fetchCalendarData();
+    }, []);
 
     return (
         <Card className="w-full max-w-md mx-auto">
@@ -169,28 +69,11 @@ export default function GoogleCalendarComponent() {
                 <CardTitle>Google Calendar Availability</CardTitle>
             </CardHeader>
             <CardContent>
-                <Script src="https://apis.google.com/js/api.js" onLoad={handleGapiLoad} />
-                <Script src="https://accounts.google.com/gsi/client" onLoad={handleGisLoad} />
-
                 <div className="flex flex-col space-y-2 mb-4">
-                    <div className="flex space-x-2">
-                        <Button onClick={handleAuthClick} disabled={!gapiInited || !gisInited}>
-                            Authorize
-                        </Button>
-                        <Button onClick={handleSignoutClick} disabled={!gapiInited || !gisInited} variant="outline">
-                            Sign Out
-                        </Button>
-                    </div>
-                    {accessToken && (
-                        <div className="text-sm break-all">
-                            <strong>Access Token:</strong> {accessToken}
-                        </div>
-                    )}
-                    {refreshToken && (
-                        <div className="text-sm break-all">
-                            <strong>Refresh Token:</strong> {refreshToken}
-                        </div>
-                    )}
+                    <Button onClick={handleAuthClick} disabled={isLoading}>
+                        {isLoading ? 'Loading...' : 'Authorize Google Calendar'}
+                    </Button>
+                    {error && <div className="text-red-500">{error}</div>}
                 </div>
 
                 {Object.keys(busyPeriods).length > 0 && (

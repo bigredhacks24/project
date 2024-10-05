@@ -1,42 +1,47 @@
 {
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
-  },
-  "dependencies": {
-    "@radix-ui/react-checkbox": "^1.1.1",
-    "@radix-ui/react-dropdown-menu": "^2.1.1",
-    "@radix-ui/react-label": "^2.1.0",
-    "@radix-ui/react-slot": "^1.1.0",
-    "@supabase/ssr": "latest",
-    "@supabase/supabase-js": "latest",
-    "@types/gapi": "^0.0.47",
-    "@types/gsi": "^0.0.4",
-    "autoprefixer": "10.4.17",
-    "class-variance-authority": "^0.7.0",
-    "clsx": "^2.1.1",
-    "date-fns": "^3.6.0",
-    "geist": "^1.2.1",
-    "googleapis": "^144.0.0",
-    "lucide-react": "^0.436.0",
-    "next": "latest",
-    "next-themes": "^0.3.0",
-    "prettier": "^3.3.3",
-    "react": "18.2.0",
-    "react-day-picker": "^8.10.1",
-    "react-dom": "18.2.0"
-  },
-  "devDependencies": {
-    "@types/node": "20.10.6",
-    "@types/react": "18.2.46",
-    "@types/react-dom": "18.2.18",
-    "postcss": "8.4.33",
-    "supabase": "^1.200.3",
-    "tailwind-merge": "^2.5.2",
-    "tailwindcss": "3.4.1",
-    "tailwindcss-animate": "^1.0.7",
-    "typescript": "5.3.3"
-  }
+    "private": true,
+    "scripts": {
+        "dev": "next dev",
+        "build": "next build",
+        "start": "next start",
+        "build:worker": "cloudflare",
+        "dev:worker": "wrangler dev --port 8771",
+        "preview:worker": "npm run build:worker && npm run dev:worker",
+        "deploy:worker": "npm run build:worker && wrangler deploy"
+    },
+    "dependencies": {
+        "@radix-ui/react-checkbox": "^1.1.1",
+        "@radix-ui/react-dropdown-menu": "^2.1.1",
+        "@radix-ui/react-label": "^2.1.0",
+        "@radix-ui/react-slot": "^1.1.0",
+        "@supabase/ssr": "latest",
+        "@supabase/supabase-js": "latest",
+        "@types/gapi": "^0.0.47",
+        "@types/gsi": "^0.0.4",
+        "autoprefixer": "10.4.17",
+        "class-variance-authority": "^0.7.0",
+        "clsx": "^2.1.1",
+        "date-fns": "^3.6.0",
+        "geist": "^1.2.1",
+        "googleapis": "^144.0.0",
+        "lucide-react": "^0.436.0",
+        "next": "latest",
+        "next-themes": "^0.3.0",
+        "prettier": "^3.3.3",
+        "react": "18.2.0",
+        "react-day-picker": "^8.10.1",
+        "react-dom": "18.2.0"
+    },
+    "devDependencies": {
+        "@opennextjs/cloudflare": "^0.0.0-59a1d9e",
+        "@types/node": "20.10.6",
+        "@types/react": "18.2.46",
+        "@types/react-dom": "18.2.18",
+        "postcss": "8.4.33",
+        "supabase": "^1.200.3",
+        "tailwind-merge": "^2.5.2",
+        "tailwindcss": "3.4.1",
+        "tailwindcss-animate": "^1.0.7",
+        "typescript": "5.3.3"
+    }
 }

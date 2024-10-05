@@ -15,7 +15,7 @@ export default function Login({ searchParams }: { searchParams: Message; }) {
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        window.location.href = '/protected';
+        window.location.href = '/home';
       }
     };
     checkUser();

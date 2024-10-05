@@ -97,6 +97,8 @@ export async function POST(req: Request) {
   );
 }
 
+// -----------------
+
 // Remove a friend (DELETE)
 export async function DELETE(req: Request) {
   const supabase = createClient();

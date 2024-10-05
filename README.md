@@ -4,6 +4,7 @@
 </a>
 
 <p align="center">
+
   A cool app built with Next.js and Supabase
 </p>
 

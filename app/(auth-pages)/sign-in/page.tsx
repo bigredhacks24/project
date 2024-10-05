@@ -1,12 +1,26 @@
 "use client";
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from "@/utils/supabase/client";
 import { Message } from "@/components/form-message";
 import Link from "next/link";
 
 import { signInWithGoogle } from "../signInWithGoogle";
 
+const supabase = createClient();
 
 export default function Login({ searchParams }: { searchParams: Message; }) {
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        window.location.href = '/protected';
+      }
+    };
+    checkUser();
+  }, []);
+
   return (
     <form className="flex-1 flex flex-col min-w-64">
       <h1 className="text-2xl font-medium">Sign in</h1>

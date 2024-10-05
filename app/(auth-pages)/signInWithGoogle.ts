@@ -1,17 +1,18 @@
 import { createClient } from "@/utils/supabase/client";
+
 const supabase = createClient();
 
-export async function signInWithGoogle(e: unknown) {
-    (e as MouseEvent).preventDefault();
+export async function signInWithGoogle(e: React.MouseEvent) {
+	e.preventDefault();
 
-    const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-            redirectTo: `https://bzojwpekxrzofzuzfonp.supabase.co/auth/v1/callback`,
-        },
-    });
+	const { error } = await supabase.auth.signInWithOAuth({
+		provider: "google",
+		options: {
+			redirectTo: `${window.location.origin}/auth/callback`,
+		},
+	});
 
-    if (!error) {
-        window.location.href = data.url;
-    }
-};
+	if (error) {
+		console.error('Error signing in with Google:', error);
+	}
+}

@@ -6,7 +6,7 @@ export async function GET(req: Request) {
   const supabase = createClient();
   const url = new URL(req.url);
   const personId = url.searchParams.get("personId");
-
+  // console.log("PERSON ID" + personId);
   // Fetch events for a user by checking the 'event_person_attendance' table
   const { data: events, error } = await supabase
     .from("event")
@@ -18,9 +18,11 @@ export async function GET(req: Request) {
       )
     `
     )
-    .eq("event_person_attendance.person_id", personId);
+    .eq("event_person_attendance.person_id", personId!);
 
   if (error) {
+    console.error("Error fetching events:", error.message);
+
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 

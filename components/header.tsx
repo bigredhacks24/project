@@ -49,6 +49,10 @@ export default async function AuthButton() {
 
   return user ? (
     <div className="flex items-center gap-4">
+      {/* add playground link */}
+      <Link href="/playground" className="flex items-center">
+        <span>Playground</span>
+      </Link>
       <Link href={`/profile/${user.id}`} className="flex items-center">
         <img
           src={user.user_metadata?.avatar_url || "https://picsum.photos/200/300"} // Use user's profile photo or a placeholder

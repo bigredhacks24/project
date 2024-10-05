@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from '@/types/calendar';
+import { createClient } from '@/utils/supabase/client';
+import type { User } from '@supabase/supabase-js';
 
 interface BusyPeriod {
     start: string;
@@ -19,6 +21,7 @@ export default function GoogleCalendarComponent() {
     const [calendars, setCalendars] = useState<Calendar[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [user, setUser] = useState<User | null>(null);
 
     const handleAuthClick = async () => {
         setIsLoading(true);
@@ -41,26 +44,32 @@ export default function GoogleCalendarComponent() {
     };
 
     useEffect(() => {
-        const fetchCalendarData = async () => {
-            setIsLoading(true);
-            setError(null);
-            try {
-                const response = await fetch('/api/calendar-data');
-                const data = await response.json();
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-                setCalendars(data.calendars);
-                setBusyPeriods(data.busyPeriods);
-            } catch (err) {
-                setError('Failed to fetch calendar data');
-                console.error(err);
-            } finally {
-                setIsLoading(false);
-            }
-        };
+        let userID: string | undefined = undefined;
+        createClient().auth.getUser().then(({ data: { user } }) => {
+            userID = user?.id;
 
-        fetchCalendarData();
+            const fetchCalendarData = async () => {
+                setIsLoading(true);
+                setError(null);
+                try {
+                    const response = await fetch(`/api/calendar-data?userId=${userID}`);
+                    const data = await response.json();
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+                    setCalendars(data.calendars);
+                    setBusyPeriods(data.busyPeriods);
+                } catch (err) {
+                    setError('Failed to fetch calendar data');
+                    console.error(err);
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            fetchCalendarData();
+        });
+
     }, []);
 
     return (

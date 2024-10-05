@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { createClient } from '@supabase/supabase-js';
+import { Database } from '@/types/database.types';
 
 const oauth2Client = new google.auth.OAuth2(
   process.env.NEXT_PRIVATE_GOOGLE_CLIENT_ID,
@@ -8,14 +9,8 @@ const oauth2Client = new google.auth.OAuth2(
   `${process.env.NEXT_PUBLIC_URL}/api/gcal/callback`
 );
 
-const SCOPES = [
-  'https://www.googleapis.com/auth/userinfo.email',
-  'https://www.googleapis.com/auth/calendar.readonly',
-  'https://www.googleapis.com/auth/calendar.freebusy'
-];
-
 // Initialize Supabase client
-const supabase = createClient(
+const supabase = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
@@ -29,40 +24,34 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    console.log('Attempting to get tokens...');
     const { tokens } = await oauth2Client.getToken(code);
-    console.log('Tokens received:', tokens);
-
     oauth2Client.setCredentials(tokens);
 
     // Get user info
-    console.log('Attempting to get user info...');
     const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
     const userInfo = await oauth2.userinfo.get();
-    console.log('User info received:', userInfo.data);
 
     const userEmail = userInfo.data.email;
-    console.log(`User email: ${userEmail}`);
+
+    if (!userEmail) {
+      return NextResponse.json({ error: 'User email not found' }, { status: 400 });
+    }
 
     // Store tokens in Supabase
     const { data, error } = await supabase
-      .from('google_calendar_tokens')
-      .upsert({
-        user_email: userEmail,
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token,
-        expiry_date: tokens.expiry_date,
-      }, {
-        onConflict: 'user_email'
-      });
+      .from('person')
+      .update({ refresh_token: tokens.refresh_token })
+      .eq('email', userEmail);
 
     if (error) {
       console.error('Error storing tokens:', error);
       return NextResponse.json({ error: 'Failed to store tokens' }, { status: 500 });
     }
 
+    console.log('Tokens stored successfully');
+
     // Redirect to a success page or your app's main page
-    return NextResponse.redirect(new URL('/calendar', req.url));
+    return NextResponse.redirect(new URL('/protected', req.url));
   } catch (error) {
     console.error('Error in Google callback:', error);
     return NextResponse.json({ error: 'Authentication failed' }, { status: 500 });

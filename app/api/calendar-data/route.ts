@@ -1,43 +1,51 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { createClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database.types';
 
 // Initialize Supabase client
-const supabase = createClient(
+const supabase = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 const oauth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  `${process.env.NEXTAUTH_URL}/api/auth/callback/google`
+  process.env.NEXT_PRIVATE_GOOGLE_CLIENT_ID,
+  process.env.NEXT_PRIVATE_GOOGLE_CLIENT_SECRET,
+  `${process.env.NEXT_PUBLIC_URL}/api/gcal/callback`
 );
 
 export async function GET(req: NextRequest) {
-  // Fetch the user's tokens from Supabase
-  // You'll need to implement user authentication and get the user's ID
-  const userId = 'user_id_here'; // Replace with actual user ID
-  const { data, error } = await supabase
-    .from('google_calendar_tokens')
-    .select('*')
-    .eq('user_id', userId)
-    .single();
+  const userId = req.nextUrl.searchParams.get('userId');
 
-  if (error || !data) {
-    console.error('Error fetching tokens:', error);
-    return NextResponse.json({ error: 'Failed to fetch tokens' }, { status: 500 });
+  if (!userId) {
+    return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
   }
 
-  const tokens = {
-    access_token: data.access_token,
-    refresh_token: data.refresh_token,
-    expiry_date: data.expiry_date,
-    scope: 'https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar.freebusy',
-    token_type: 'Bearer',
-  };
+  // Fetch the user's tokens from Supabase
+  const { data: userData, error: userError } = await supabase
+    .from('person')
+    .select('refresh_token, email')
+    .eq('person_id', userId)
+    .single();
 
-  oauth2Client.setCredentials(tokens);
+  if (userError || !userData || !userData.refresh_token) {
+    console.error('Error fetching user data:', userError);
+    return NextResponse.json({ error: 'Failed to fetch user data' }, { status: 500 });
+  }
+
+  // Set up OAuth2 client with refresh token
+  oauth2Client.setCredentials({
+    refresh_token: userData.refresh_token,
+  });
+
+  // Refresh the access token
+  try {
+    await oauth2Client.refreshAccessToken();
+  } catch (refreshError) {
+    console.error('Error refreshing access token:', refreshError);
+    return NextResponse.json({ error: 'Failed to refresh access token' }, { status: 500 });
+  }
 
   const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 

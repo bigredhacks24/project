@@ -206,7 +206,7 @@ export default function CirclePage() {
                     <div className="lg:mt-[0.85rem]">
                         <h2 className="text-base font-semibold mb-2 uppercase">Availability Notifications</h2>
                         <div className="mb-6 flex justify-between items-center">
-                            <p className="font-medium text-base">{pageData.availabilityNotification}</p>
+                            <p className="font-light text-base">{pageData.availabilityNotification}</p>
                             <Button variant="link" className="p-0 h-auto text-[#B5B5B5]">Edit</Button>
                         </div>
 

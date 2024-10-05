@@ -119,7 +119,7 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ startDate, commonAvaila
 
   }, [startDate, commonAvailability]);
 
-  return <canvas ref={canvasRef} width={860} height={600} className="w-full h-auto" />;
+  return <canvas ref={canvasRef} width={860} height={1000} className="w-full h-auto" />;
 };
 
 export default WeeklyCalendar;

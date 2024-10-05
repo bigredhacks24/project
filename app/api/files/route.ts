@@ -1,11 +1,11 @@
 import { NextResponse, NextRequest } from "next/server";
 import { pinata } from "@/utils/config";
 
-export const config = {
-    api: {
-        bodyParser: false,
-    },
-};
+// export const config = {
+//     api: {
+//         bodyParser: false,
+//     },
+// };
 
 async function getOrCreateUserGroup(userId: string) {
     const groupName = `user_${userId}_group`;

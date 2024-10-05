@@ -6,8 +6,6 @@ import { SmtpMessage } from "../smtp-message";
 
 import { signInWithGoogle } from "../signInWithGoogle";
 
-export const runtime = 'edge';
-
 export default function Signup({ searchParams }: { searchParams: Message; }) {
   if ("message" in searchParams) {
     return (

@@ -16,8 +16,6 @@ export const metadata = {
   description: "The fastest way to build apps with Next.js and Supabase",
 };
 
-export const runtime = 'edge';
-
 export default function RootLayout({
   children,
 }: {

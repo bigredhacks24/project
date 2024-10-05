@@ -1,8 +1,6 @@
 import { InfoIcon } from "lucide-react";
 import GoogleCalendarComponent from "@/components/GoogleCalendarComponent";
 
-export const runtime = 'edge';
-
 export default async function ProtectedPage() {
   return (
     <>

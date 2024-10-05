@@ -129,6 +129,7 @@ export type Database = {
           full_name: string | null
           person_id: string
           phone_number: string | null
+          profile_picture: string | null
           refresh_token: string | null
         }
         Insert: {
@@ -137,6 +138,7 @@ export type Database = {
           full_name?: string | null
           person_id: string
           phone_number?: string | null
+          profile_picture?: string | null
           refresh_token?: string | null
         }
         Update: {
@@ -145,6 +147,7 @@ export type Database = {
           full_name?: string | null
           person_id?: string
           phone_number?: string | null
+          profile_picture?: string | null
           refresh_token?: string | null
         }
         Relationships: []

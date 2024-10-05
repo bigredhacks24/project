@@ -1,0 +1,9 @@
+main = ".worker-next/index.mjs"
+name = "brh24-project"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+experimental_assets = { directory = ".worker-next/assets", binding = "ASSETS" }
+
+[[kv_namespaces]]
+binding = "NEXT_CACHE_WORKERS_KV"
+id = "8ba7c11e54614c668d564d15f4ed7d27"

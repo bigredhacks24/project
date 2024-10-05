@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import type { Database } from '@/types/database.types';
 import { Badge } from "@/components/ui/badge";
+import EventCard from "@/components/EventCard";
 
 type CircleData = Database['public']['Tables']['group']['Row'] & {
     members: { full_name: string; email: string; }[];
@@ -116,7 +116,7 @@ export default function CirclePage() {
                         </div>
 
 
-                        <div className="flex flex-col gap-y-4">
+                        <div className="flex flex-col gap-y-8">
                             <div>
                                 <h2 className="text-base font-semibold mb-2 uppercase">Upcoming Events</h2>
                                 <div className="mb-6">
@@ -134,7 +134,7 @@ export default function CirclePage() {
                             <div>
                                 <h2 className="text-base font-semibold mb-2 uppercase">Suggested Events</h2>
                                 {pageData.suggestedEvents.map((event, index) => (
-                                    <div key={index} className="flex items-center justify-between mb-2">
+                                    <div key={index} className="flex items-center justify-between space-y-1">
                                         <div className="flex items-center">
                                             <Badge className="bg-[#CACBCC] text-white mr-2">
                                                 <span className="text-xs">{`${event.date}, ${event.time}`}</span>
@@ -201,19 +201,30 @@ export default function CirclePage() {
                         </div>
 
                         <h2 className="text-base font-semibold mb-2 uppercase">Common Availability</h2>
-                        <Calendar className="mb-6" />
-
+                        <canvas className="mb-6 mx-auto w-full bg-slate-200 h-[620px]"></canvas>
                     </div>
 
                 </div>
 
                 <div className="flex flex-col">
-                    <h3 className="text-2xl font-medium mb-2">Past Events</h3>
+                    <h3 className="text-2xl font-medium mb-4">Past Events</h3>
                     <div className="flex space-x-2 overflow-x-auto pb-4">
                         {pageData.pastEvents.map((event, index) => (
-                            <div key={index} className={`flex-shrink-0 w-24 h-24 rounded ${index === 0 ? 'bg-blue-500' : 'bg-gray-200'} flex items-end p-2`}>
-                                <span className="text-xs text-white">{`${event.date}, ${event.time}`}</span>
-                            </div>
+                            <EventCard key={index} eventAttendance={{
+                                event: {
+                                    event_id: index.toString(),
+                                    group_id: circle.group_id,
+                                    name: event.title,
+                                    creation_timestamp: "2024-01-01",
+                                    start_timestamp: "2024-01-01",
+                                    end_timestamp: "2024-01-01",
+                                },
+                                group: circle,
+                                attending: index === 0 ? true : false
+                            }} />
+                            // <div key={index} className={`flex-shrink-0 w-24 h-24 rounded ${index === 0 ? 'bg-blue-500' : 'bg-gray-200'} flex items-end p-2`}>
+                            //     <span className="text-xs text-white">{`${event.date}, ${event.time}`}</span>
+                            // </div>
                         ))}
                     </div>
                 </div>

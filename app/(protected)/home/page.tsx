@@ -70,10 +70,9 @@ export default async function Home() {
   }
 
   return (
-    <div className="flex w-[1222px] h-[881px] flex-col items-start gap-[72px] shrink-0">
-      <div className="flex flex-col items-start gap-[24px] self-stretch">
-        <div className="w-full flex flex-col items-start gap-6">
-
+    <div className="flex container h-[881px] flex-col items-start gap-[72px] shrink-0">
+      <div className="flex flex-col items-start gap-6 self-stretch">
+        <div className="flex flex-col items-start gap-6 w-full">
           <div className="flex p-2.5 justify-center items-center gap-2.5">
             <div className="text-black font-roboto text-[36px] font-medium leading-[20.25px] tracking-[0.338px]">
               Upcoming Events

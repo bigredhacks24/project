@@ -7,6 +7,10 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const personId = url.searchParams.get("personId");
 
+  if (!personId) {
+    return NextResponse.json({ error: "Person ID is required" }, { status: 400 });
+  }
+
   // Fetch events for a user by checking the 'event_person_attendance' table
   const { data: events, error } = await supabase
     .from("event")

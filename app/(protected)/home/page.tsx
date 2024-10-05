@@ -1,9 +1,6 @@
-import { createClient } from "@/utils/supabase/server";
-import { InfoIcon } from "lucide-react";
-import { redirect } from "next/navigation";
 import HoverCard from "@/components/HoverCard"; // Adjust the import path as necessary
 
-export default async function Home({ user }: { user: any }) {
+export default async function Home() {
   return (
     <div className="flex w-[1222px] h-[881px] flex-col items-start gap-[72px] shrink-0">
       <div className="flex flex-col items-start gap-6 self-stretch">

@@ -10,6 +10,8 @@ import { signInWithGoogle } from "../signInWithGoogle";
 
 const supabase = createClient();
 
+export const runtime = 'edge';
+
 export default function Login({ searchParams }: { searchParams: Message; }) {
   useEffect(() => {
     const checkUser = async () => {

@@ -13,6 +13,8 @@ const SCOPES = [
   'https://www.googleapis.com/auth/calendar.freebusy'
 ];
 
+export const runtime = 'edge';
+
 export async function GET() {
   const authUrl = oauth2Client.generateAuthUrl({
     access_type: 'offline',

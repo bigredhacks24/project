@@ -15,6 +15,8 @@ const oauth2Client = new google.auth.OAuth2(
   `${process.env.NEXT_PUBLIC_URL}/api/gcal/callback`
 );
 
+export const runtime = 'edge';
+
 export async function GET(req: NextRequest) {
   const userId = req.nextUrl.searchParams.get('userId');
 

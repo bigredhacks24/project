@@ -29,6 +29,8 @@ export default function GoogleCalendarComponent() {
     const [gisInited, setGisInited] = useState<boolean>(false);
     const [tokenClient, setTokenClient] = useState<TokenClient | null>(null);
     const [busyPeriods, setBusyPeriods] = useState<FormattedBusyPeriods>({});
+    const [accessToken, setAccessToken] = useState<string | null>(null);
+    const [refreshToken, setRefreshToken] = useState<string | null>(null);
 
     useEffect(() => {
         if (gapiInited && gisInited) {
@@ -50,6 +52,12 @@ export default function GoogleCalendarComponent() {
             if (resp.error !== undefined) {
                 throw resp;
             }
+            // Set the access token when received
+            setAccessToken(resp.access_token);
+            // Set the refresh token if available
+            if (resp.refresh_token) {
+                setRefreshToken(resp.refresh_token);
+            }
             await fetchFreeBusy();
         };
 
@@ -67,6 +75,8 @@ export default function GoogleCalendarComponent() {
                 console.log('Token revoked');
                 gapi.client.setToken(null);
                 setBusyPeriods({});
+                setAccessToken(null); // Clear the access token on sign out
+                setRefreshToken(null); // Clear the refresh token on sign out
             });
         }
     };
@@ -138,13 +148,25 @@ export default function GoogleCalendarComponent() {
                 <Script src="https://apis.google.com/js/api.js" onLoad={handleGapiLoad} />
                 <Script src="https://accounts.google.com/gsi/client" onLoad={handleGisLoad} />
 
-                <div className="flex space-x-2 mb-4">
-                    <Button onClick={handleAuthClick} disabled={!gapiInited || !gisInited}>
-                        Authorize
-                    </Button>
-                    <Button onClick={handleSignoutClick} disabled={!gapiInited || !gisInited} variant="outline">
-                        Sign Out
-                    </Button>
+                <div className="flex flex-col space-y-2 mb-4">
+                    <div className="flex space-x-2">
+                        <Button onClick={handleAuthClick} disabled={!gapiInited || !gisInited}>
+                            Authorize
+                        </Button>
+                        <Button onClick={handleSignoutClick} disabled={!gapiInited || !gisInited} variant="outline">
+                            Sign Out
+                        </Button>
+                    </div>
+                    {accessToken && (
+                        <div className="text-sm break-all">
+                            <strong>Access Token:</strong> {accessToken}
+                        </div>
+                    )}
+                    {refreshToken && (
+                        <div className="text-sm break-all">
+                            <strong>Refresh Token:</strong> {refreshToken}
+                        </div>
+                    )}
                 </div>
 
                 {Object.keys(busyPeriods).length > 0 && (

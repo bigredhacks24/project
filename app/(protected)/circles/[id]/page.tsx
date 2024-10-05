@@ -7,6 +7,7 @@ import type { Database } from '@/types/database.types';
 import { Badge } from "@/components/ui/badge";
 import EventCard from "@/components/EventCard";
 import Spinner from "@/components/Spinner";
+import WeeklyCalendar from "@/components/WeeklyCalendar";
 
 type CircleData = Database['public']['Tables']['group']['Row'] & {
     members: { full_name: string; email: string; }[];
@@ -71,6 +72,13 @@ export default function CirclePage() {
     const [circle, setCircle] = useState<CircleData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [pageData, setPageData] = useState<CirclePageData>(dummyData);
+    const [commonAvailability, setCommonAvailability] = useState<{ start: Date; end: Date; }[]>([
+        { start: new Date(2024, 0, 8, 10, 0), end: new Date(2024, 0, 8, 12, 0) },
+        { start: new Date(2024, 0, 9, 14, 0), end: new Date(2024, 0, 9, 16, 0) },
+        { start: new Date(2024, 0, 11, 9, 0), end: new Date(2024, 0, 11, 11, 0) },
+        { start: new Date(2024, 0, 12, 13, 0), end: new Date(2024, 0, 12, 15, 0) },
+        { start: new Date(2024, 0, 14, 15, 0), end: new Date(2024, 0, 14, 18, 0) },
+    ]);
 
     useEffect(() => {
         const fetchCircleData = async () => {
@@ -203,7 +211,7 @@ export default function CirclePage() {
                         </div>
 
                         <h2 className="text-base font-semibold mb-2 uppercase">Common Availability</h2>
-                        <canvas className="mb-6 mx-auto w-full bg-slate-200 h-[620px]"></canvas>
+                        <WeeklyCalendar startDate={new Date(2024, 0, 8)} commonAvailability={commonAvailability} />
                     </div>
 
                 </div>

@@ -4,11 +4,12 @@ import { useState, useEffect } from 'react';
 import Script from 'next/script';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Calendar } from '@/types/calendar';
 
 const CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 const API_KEY = process.env.NEXT_PUBLIC_GCLOUD_API_KEY;
 const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
-const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
+const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar.freebusy';
 
 interface TokenClient {
     callback: (resp: any) => void;
@@ -24,6 +25,10 @@ interface FormattedBusyPeriods {
     [day: string]: string[];
 }
 
+interface CalendarList {
+    items: Calendar[];
+}
+
 export default function GoogleCalendarComponent() {
     const [gapiInited, setGapiInited] = useState<boolean>(false);
     const [gisInited, setGisInited] = useState<boolean>(false);
@@ -31,6 +36,7 @@ export default function GoogleCalendarComponent() {
     const [busyPeriods, setBusyPeriods] = useState<FormattedBusyPeriods>({});
     const [accessToken, setAccessToken] = useState<string | null>(null);
     const [refreshToken, setRefreshToken] = useState<string | null>(null);
+    const [calendars, setCalendars] = useState<Calendar[]>([]);
 
     useEffect(() => {
         if (gapiInited && gisInited) {
@@ -45,6 +51,46 @@ export default function GoogleCalendarComponent() {
         });
     };
 
+    const fetchCalendarsAndBusyPeriods = async () => {
+        try {
+            // Fetch calendar list
+            const calendarListResponse = await gapi.client.request({
+                path: 'https://www.googleapis.com/calendar/v3/users/me/calendarList',
+                method: 'GET',
+            });
+
+            const calendarList = calendarListResponse.result.items;
+            setCalendars(calendarList);
+
+            // Calculate time range (now to one week later)
+            const now = new Date();
+            const oneWeekLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+            // Prepare freebusy query
+            const freeBusyResponse = await gapi.client.request({
+                path: 'https://www.googleapis.com/calendar/v3/freeBusy',
+                method: 'POST',
+                body: JSON.stringify({
+                    timeMin: now.toISOString(),
+                    timeMax: oneWeekLater.toISOString(),
+                    items: calendarList.map((calendar: Calendar) => ({ id: calendar.id }))
+                })
+            });
+
+            const allBusyPeriods: BusyPeriod[] = [];
+            Object.values(freeBusyResponse.result.calendars).forEach((calendar: any) => {
+                if (calendar.busy) {
+                    allBusyPeriods.push(...calendar.busy);
+                }
+            });
+
+            const formattedBusyPeriods = formatBusyPeriods(allBusyPeriods);
+            setBusyPeriods(formattedBusyPeriods);
+        } catch (err) {
+            console.error('Error fetching calendars and busy periods:', err);
+        }
+    };
+
     const handleAuthClick = () => {
         if (!tokenClient) return;
 
@@ -52,13 +98,11 @@ export default function GoogleCalendarComponent() {
             if (resp.error !== undefined) {
                 throw resp;
             }
-            // Set the access token when received
             setAccessToken(resp.access_token);
-            // Set the refresh token if available
             if (resp.refresh_token) {
                 setRefreshToken(resp.refresh_token);
             }
-            await fetchFreeBusy();
+            await fetchCalendarsAndBusyPeriods();
         };
 
         if (gapi.client.getToken() === null) {
@@ -78,28 +122,6 @@ export default function GoogleCalendarComponent() {
                 setAccessToken(null); // Clear the access token on sign out
                 setRefreshToken(null); // Clear the refresh token on sign out
             });
-        }
-    };
-
-    const fetchFreeBusy = async () => {
-        const now = new Date();
-        const oneWeekLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-        try {
-            const response = await gapi.client.request({
-                path: 'https://www.googleapis.com/calendar/v3/freeBusy',
-                method: 'POST',
-                body: {
-                    timeMin: now.toISOString(),
-                    timeMax: oneWeekLater.toISOString(),
-                    items: [{ id: 'primary' }]
-                }
-            });
-
-            const busyPeriods = response.result.calendars.primary.busy;
-            const formattedBusyPeriods = formatBusyPeriods(busyPeriods);
-            setBusyPeriods(formattedBusyPeriods);
-        } catch (err) {
-            console.error('Error fetching free/busy information:', err);
         }
     };
 

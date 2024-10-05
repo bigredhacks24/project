@@ -1,5 +1,6 @@
 import HoverCard from "@/components/HoverCard"; // Adjust the import path as necessary
 
+
 export default async function Home() {
   return (
     <div className="flex w-[1222px] h-[881px] flex-col items-start gap-[72px] shrink-0">

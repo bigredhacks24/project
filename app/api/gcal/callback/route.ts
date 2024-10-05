@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
     console.log('Tokens stored successfully');
 
     // Redirect to a success page or your app's main page
-    return NextResponse.redirect(new URL('/protected', req.url));
+    return NextResponse.redirect(new URL('/home', req.url));
   } catch (error) {
     console.error('Error in Google callback:', error);
     return NextResponse.json({ error: 'Authentication failed' }, { status: 500 });

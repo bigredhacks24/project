@@ -6,6 +6,7 @@ export async function GET(req: Request) {
   const supabase = createClient();
   const url = new URL(req.url);
   const personId = url.searchParams.get("personId");
+  // hello!
   // console.log("PERSON ID" + personId);
   // Fetch events for a user by checking the 'event_person_attendance' table
   const { data: events, error } = await supabase

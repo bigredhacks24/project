@@ -1,7 +1,7 @@
 import { InfoIcon } from "lucide-react";
 import GoogleCalendarComponent from "@/components/GoogleCalendarComponent";
 
-export default async function ProtectedPage({ user }: { user: any; }) {
+export default async function ProtectedPage() {
   return (
     <>
       <div className="flex-1 w-full flex flex-col gap-12">

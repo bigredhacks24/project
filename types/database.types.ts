@@ -21,7 +21,7 @@ export type Database = {
         Insert: {
           creation_timestamp: string
           end_timestamp: string
-          event_id: string
+          event_id?: string
           group_id?: string | null
           name: string
           start_timestamp: string
@@ -79,17 +79,14 @@ export type Database = {
       }
       group: {
         Row: {
-          events: string[] | null
           group_id: string
           name: string
         }
         Insert: {
-          events?: string[] | null
-          group_id: string
+          group_id?: string
           name: string
         }
         Update: {
-          events?: string[] | null
           group_id?: string
           name?: string
         }

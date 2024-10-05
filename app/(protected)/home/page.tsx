@@ -38,7 +38,7 @@ export default function ProtectedPage() {
   }
 
   return (
-    <div className="flex w-[1222px] h-[881px] flex-col items-start gap-[72px] shrink-0">
+    <div className="flex container h-[881px] flex-col items-start gap-[72px] shrink-0">
       <div className="flex flex-col items-start gap-6 self-stretch">
         <div className="flex flex-col items-start gap-6 w-full">
           <div className="flex p-2.5 justify-center items-center gap-2.5">

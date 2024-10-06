@@ -7,6 +7,7 @@ import CreateCircleButton from "@/components/CreateCircleButton";
 import EventCarousel from "@/components/EventCarousel";
 import { Button } from "@/components/ui/button";
 import InviteFriendButton from "@/components/InviteFriendButton";
+
 interface EventWithAttendance {
   event_id: string;
   group_id: string | null;
@@ -52,7 +53,11 @@ export default async function Home() {
   // Fetch groups
   const { data: groups, error: groupsError } = await supabase
     .from("group")
-    .select("*");
+    .select(`
+      *,
+      group_person!inner (person_id)
+    `)
+    .eq("group_person.person_id", user.id);
 
   if (eventsError || friendsError || groupsError) {
     console.error(

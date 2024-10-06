@@ -13,7 +13,7 @@ const CirclesCard: React.FC<CirclesCardProps> = ({ group, eventCount }) => {
   const router = useRouter();
 
   const handleClick = () => {
-    router.push(`/groups/${group.group_id}`);
+    router.push(`/circles/${group.group_id}`);
   };
 
   return (

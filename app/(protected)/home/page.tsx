@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import PersonCard from "@/components/PersonCard";
 import CirclesCard from "@/components/CirclesCard";
@@ -8,9 +8,14 @@ import { Friend, Group } from "@/types/general-types";
 import CreateCircleButton from "@/components/CreateCircleButton";
 import EventCarousel from "@/components/EventCarousel";
 import FileUploadAndGallery from "@/components/FileUploadAndGallery";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import Spinner from '@/components/Spinner';
-import type { EventWithAttendance } from '@/types/general-types';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import Spinner from "@/components/Spinner";
+import type { EventWithAttendance } from "@/types/general-types";
 import InviteFriendButton from "@/components/InviteFriendButton";
 import EventModal from "@/components/EventModal";
 import PlanModal from "@/components/PlanModal";
@@ -30,7 +35,8 @@ export default function Home() {
   const [events, setEvents] = useState<EventWithAttendance[]>([]);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
-  const [selectedEventWithAttendance, setSelectedEventWithAttendance] = useState<EventWithAttendance | null>(null);
+  const [selectedEventWithAttendance, setSelectedEventWithAttendance] =
+    useState<EventWithAttendance | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
@@ -49,7 +55,10 @@ export default function Home() {
       const supabase = createClient();
 
       try {
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
         if (userError) throw userError;
         setUser(user);
 
@@ -57,7 +66,8 @@ export default function Home() {
           // Fetch events
           const { data: eventsData, error: eventsError } = await supabase
             .from("event")
-            .select(`
+            .select(
+              `
               *,
               event_person_attendance!inner (
                 attending,
@@ -68,47 +78,57 @@ export default function Home() {
               group (
                 *
               )
-            `)
+            `
+            )
             .eq("event_person_attendance.person_id", user.id)
-            .gte('start_timestamp', new Date().toISOString())
-            .order('start_timestamp', { ascending: true });
+            .gte("start_timestamp", new Date().toISOString())
+            .order("start_timestamp", { ascending: true });
           if (eventsError) throw eventsError;
-          setEvents(eventsData.map((event) => ({
-            ...event,
-            event_person_attendance: event.event_person_attendance.map((attendance) => ({
-              attending: attendance.attending ?? false,
-              person: {
-                person_id: attendance.person?.person_id || "",
-                email: attendance.person?.email || "",
-                full_name: attendance.person?.full_name || "",
-                friends: attendance.person?.friends || [],
-                phone_number: attendance.person?.phone_number || "",
-                profile_picture: attendance.person?.profile_picture || "",
-                refresh_token: attendance.person?.refresh_token || "",
-              }
+          setEvents(
+            eventsData.map((event) => ({
+              ...event,
+              event_person_attendance: event.event_person_attendance.map(
+                (attendance) => ({
+                  attending: attendance.attending ?? false,
+                  person: {
+                    person_id: attendance.person?.person_id || "",
+                    email: attendance.person?.email || "",
+                    full_name: attendance.person?.full_name || "",
+                    friends: attendance.person?.friends || [],
+                    phone_number: attendance.person?.phone_number || "",
+                    profile_picture: attendance.person?.profile_picture || "",
+                    refresh_token: attendance.person?.refresh_token || "",
+                  },
+                })
+              ),
             }))
-          })));
+          );
 
           // Fetch groups
-          const { data: groupsData, error: groupsError } = await supabase
-            .from("group")
-            .select(`
+          const { data: groupsData, error: groupsError } = await supabase.from(
+            "group"
+          ).select(`
               *,
               event_count:event(count),
               person_group:person(full_name)
             `);
           if (groupsError) throw groupsError;
 
-          const transformedGroups = groupsData.reduce((acc: any[], group: any) => {
-            if (!acc.some(g => g.group_id === group.group_id)) {
-              acc.push({
-                ...group,
-                event_count: group.event_count[0] || { count: 0 },
-                members: group.person_group.map((name: string | null) => name || "")
-              });
-            }
-            return acc;
-          }, []);
+          const transformedGroups = groupsData.reduce(
+            (acc: any[], group: any) => {
+              if (!acc.some((g) => g.group_id === group.group_id)) {
+                acc.push({
+                  ...group,
+                  event_count: group.event_count[0] || { count: 0 },
+                  members: group.person_group.map(
+                    (name: string | null) => name || ""
+                  ),
+                });
+              }
+              return acc;
+            },
+            []
+          );
 
           setGroups(transformedGroups);
 
@@ -195,14 +215,13 @@ export default function Home() {
           <EventCarousel events={events} onEventClick={handleEventClick} />
         </div>
       </div>
-      <div className="flex w-full items-start gap-9">
-      <div className="flex flex-col items-start gap-6 flex-[1_0_0]">
-      <div className="flex items-center justify-between w-full">
-          <div className="text-black font-roboto text-[36px] font-medium leading-[20.25px] tracking-[0.338px]">
-            Your Circles
+      <div className="w-[1222px] items-start gap-9 grid grid-cols-2">
+        <div>
+          <div className="flex items-start gap-6">
+            <div className="text-black font-roboto text-[36px] font-medium leading-[20.25px] tracking-[0.338px]">
+              Your Circles
             </div>
             <CreateCircleButton />
-
           </div>
           <div className="flex overflow-x-scroll gap-x-4 w-full mt-[45px]">
             {groups &&
@@ -213,11 +232,8 @@ export default function Home() {
                     eventCount={group.event_count?.count || 0}
                   />
                 </div>
-              ))
-            }
-            {!groups && (
-              <div>No circles found.</div>
-            )}
+              ))}
+            {!groups && <div>No circles found.</div>}
           </div>
         </div>
         <div>
@@ -237,9 +253,14 @@ export default function Home() {
           </div>
         </div>
 
-        <Dialog open={!!selectedEventWithAttendance} onOpenChange={() => setSelectedEventWithAttendance(null)}>
+        <Dialog
+          open={!!selectedEventWithAttendance}
+          onOpenChange={() => setSelectedEventWithAttendance(null)}
+        >
           <DialogContent>
-            {selectedEventWithAttendance && <FileUploadAndGallery event={selectedEventWithAttendance} />}
+            {selectedEventWithAttendance && (
+              <FileUploadAndGallery event={selectedEventWithAttendance} />
+            )}
           </DialogContent>
         </Dialog>
       </div>

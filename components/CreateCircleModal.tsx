@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import { Button } from "@/components/ui/button"; // Importing Button for consistent UI
+
 import { Person } from "@/types/general-types";
 
 interface CreateCircleModalProps {
@@ -64,7 +66,7 @@ const CreateCircleModal: React.FC<CreateCircleModalProps> = ({
           placeholder="Circle Name"
           className="w-full p-2 mb-4 border rounded"
         />
-        <h3 className="text-lg font-semibold mb-2">Invite Friends</h3>
+        <h3 className="text-lg font-semibold mb-2">Add Friends</h3>
         {inviteEmails.map((email, index) => (
           <div key={index} className="mb-2">
             <input
@@ -76,7 +78,7 @@ const CreateCircleModal: React.FC<CreateCircleModalProps> = ({
             />
             {invitedPeople.find(p => p.email === email) && (
               <div className="flex items-center mt-1">
-                <Image
+                <img
                   src={invitedPeople.find(p => p.email === email)?.profile_picture || "/default-avatar.png"}
                   alt="Profile"
                   width={24}
@@ -101,12 +103,11 @@ const CreateCircleModal: React.FC<CreateCircleModalProps> = ({
           >
             Cancel
           </button>
-          <button
+          <Button
             onClick={handleSubmit}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
             Create Circle
-          </button>
+          </Button>
         </div>
       </div>
     </div>

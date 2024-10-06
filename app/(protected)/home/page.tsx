@@ -183,7 +183,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex w-full h-[881px] flex-col items-start gap-[72px] shrink-0">
+    <div className="flex w-full flex-col items-start gap-[72px] shrink-0">
       <div className="flex flex-col items-start gap-[24px] self-stretch">
         <div className="w-full flex flex-col items-start gap-6">
           <div className="flex justify-between items-center">
@@ -195,13 +195,14 @@ export default function Home() {
           <EventCarousel events={events} onEventClick={handleEventClick} />
         </div>
       </div>
-      <div className="w-[1222px] items-start gap-9 grid grid-cols-2">
-        <div>
-          <div className="flex items-start gap-6">
-            <div className="text-black font-roboto text-[36px] font-medium leading-[20.25px] tracking-[0.338px]">
-              Your Circles
+      <div className="flex w-full items-start gap-9">
+      <div className="flex flex-col items-start gap-6 flex-[1_0_0]">
+      <div className="flex items-center justify-between w-full">
+          <div className="text-black font-roboto text-[36px] font-medium leading-[20.25px] tracking-[0.338px]">
+            Your Circles
             </div>
             <CreateCircleButton />
+
           </div>
           <div className="flex overflow-x-scroll gap-x-4 w-full mt-[45px]">
             {groups &&

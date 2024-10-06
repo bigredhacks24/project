@@ -1,11 +1,11 @@
 "use client";
 
 import React from "react";
-import { Group } from "@/types/general-types"; // Import the Group type
+import { Group } from "@/types/general-types";
 import { useRouter } from "next/navigation";
 
 interface CirclesCardProps {
-  group: Group; // Use the Group type
+  group: Group;
   eventCount: number;
 }
 
@@ -14,6 +14,21 @@ export default function CirclesCard({ group, eventCount }: CirclesCardProps) {
 
   const handleClick = () => {
     router.push(`/circles/${group.group_id}`);
+  };
+
+  const renderMemberNames = () => {
+    const memberCount = group.members.length;
+    if (memberCount === 0) return "No members";
+
+    const displayedMembers = group.members.slice(0, 3).map(member => member.full_name.split(' ')[0]);
+
+    if (memberCount <= 3) {
+      return displayedMembers.join(", ");
+    } else {
+      const othersCount = memberCount - 3;
+      const othersSuffix = othersCount === 1 ? "other" : "others";
+      return `${displayedMembers.join(", ")} and ${othersCount} ${othersSuffix}`;
+    }
   };
 
   return (
@@ -30,12 +45,10 @@ export default function CirclesCard({ group, eventCount }: CirclesCardProps) {
             </div>
           </div>
         </div>
-        <div className="flex items-start">
-          <div className="flex h-5 justify-center items-center">
-            <div className="flex justify-center items-center gap-2.5">
-              <div className="text-[#9C9C9C] font-inter text-xs font-normal leading-[1.2]">
-                <p>A lovely group!</p>
-              </div>
+        <div className="flex items-start max-h-[40px] overflow-y-auto">
+          <div className="flex flex-col justify-center items-center">
+            <div className="text-[#9C9C9C] font-inter text-xs font-normal leading-[1.2] text-center">
+              {renderMemberNames()}
             </div>
           </div>
         </div>

@@ -11,7 +11,6 @@ import FileUploadAndGallery from "@/components/FileUploadAndGallery";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Spinner from '@/components/Spinner';
 import type { EventWithAttendance } from '@/types/general-types';
-import { Button } from "@/components/ui/button";
 import InviteFriendButton from "@/components/InviteFriendButton";
 
 export default function Home() {
@@ -73,7 +72,8 @@ export default function Home() {
             .from("group")
             .select(`
               *,
-              event_count:event(count)
+              event_count:event(count),
+              person_group:person(full_name)
             `);
           if (groupsError) throw groupsError;
 
@@ -81,13 +81,12 @@ export default function Home() {
             if (!acc.some(g => g.group_id === group.group_id)) {
               acc.push({
                 ...group,
-                event_count: group.event_count[0] || { count: 0 }
+                event_count: group.event_count[0] || { count: 0 },
+                members: group.person_group.map((name: string | null) => name || "")
               });
             }
             return acc;
           }, []);
-
-          console.log(transformedGroups);
 
           setGroups(transformedGroups);
 

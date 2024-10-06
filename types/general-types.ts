@@ -13,8 +13,8 @@ export interface Group {
   group_id: string;
   name: string;
   event_count: { count: number; } | null;
+  members: Person[];
 }
-
 
 export interface EventWithAttendance {
   event_id: string;
@@ -25,7 +25,7 @@ export interface EventWithAttendance {
   end_timestamp: string;
   description: string | null;
   event_person_attendance: { person: Person; attending: boolean; }[];
-  group: Omit<Group, "event_count"> | null;
+  group: Omit<Group, "event_count" | "members"> | null;
 }
 
 // Group Types

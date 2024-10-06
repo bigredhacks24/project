@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import type { Database } from '@/types/database.types';
 import { Badge } from "@/components/ui/badge";
@@ -10,68 +10,26 @@ import Spinner from "@/components/Spinner";
 import WeeklyCalendar from "@/components/WeeklyCalendar";
 
 type CircleData = Database['public']['Tables']['group']['Row'] & {
-    members: { full_name: string; email: string; }[];
+    members: Database['public']['Tables']['person']['Row'][];
 };
 
-type Event = {
-    date: string;
-    time: string;
-    title: string;
-    status?: string;
-};
+type Event = Database['public']['Tables']['event']['Row'];
 
 type CirclePageData = {
-    name: string;
-    members: string[];
     upcomingEvents: Event[];
     suggestedEvents: Event[];
-    availabilityNotification: string;
     pastEvents: Event[];
-};
-
-const dummyData: CirclePageData = {
-    name: "BRH Squad",
-    members: ["Valerie Wong", "Jasmine Li", "Simon Ilincev", "Temi Adebowale"],
-    upcomingEvents: [
-        { date: "10/8", time: "5PM-7PM", title: "Picnic on the Slope", status: "IN 2 DAYS" }
-    ],
-    suggestedEvents: [
-        { date: "10/8", time: "5PM-7PM", title: "Game Night at Valerie's Apartment" },
-        { date: "10/8", time: "5PM-7PM", title: "Game Night at Valerie's Apartment" },
-        { date: "10/8", time: "5PM-7PM", title: "Game Night at Valerie's Apartment" }
-    ],
-    availabilityNotification: "Email weekly with common availabilities for the next week",
-    pastEvents: [
-        { date: "10/8", time: "5PM-7PM", title: "Past Event 1" },
-        { date: "10/8", time: "5PM-7PM", title: "Past Event 2" },
-        { date: "10/8", time: "5PM-7PM", title: "Past Event 3" },
-        { date: "10/8", time: "5PM-7PM", title: "Past Event 4" },
-        { date: "10/8", time: "5PM-7PM", title: "Past Event 5" },
-        { date: "10/8", time: "5PM-7PM", title: "Past Event 5" },
-        { date: "10/8", time: "5PM-7PM", title: "Past Event 5" },
-        { date: "10/8", time: "5PM-7PM", title: "Past Event 5" },
-        { date: "10/8", time: "5PM-7PM", title: "Past Event 5" },
-        { date: "10/8", time: "5PM-7PM", title: "Past Event 5" },
-        { date: "10/8", time: "5PM-7PM", title: "Past Event 5" },
-        { date: "10/8", time: "5PM-7PM", title: "Past Event 5" },
-        { date: "10/8", time: "5PM-7PM", title: "Past Event 5" },
-        { date: "10/8", time: "5PM-7PM", title: "Past Event 5" },
-        { date: "10/8", time: "5PM-7PM", title: "Past Event 5" },
-        { date: "10/8", time: "5PM-7PM", title: "Past Event 5" },
-        { date: "10/8", time: "5PM-7PM", title: "Past Event 5" },
-        { date: "10/8", time: "5PM-7PM", title: "Past Event 5" },
-        { date: "10/8", time: "5PM-7PM", title: "Past Event 5" },
-        { date: "10/8", time: "5PM-7PM", title: "Past Event 5" },
-        { date: "10/8", time: "5PM-7PM", title: "Past Event 5" },
-        { date: "10/8", time: "5PM-7PM", title: "Past Event 5" }
-    ]
 };
 
 export default function CirclePage() {
     const { id } = useParams();
     const [circle, setCircle] = useState<CircleData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [pageData, setPageData] = useState<CirclePageData>(dummyData);
+    const [pageData, setPageData] = useState<CirclePageData>({
+        upcomingEvents: [],
+        suggestedEvents: [],
+        pastEvents: []
+    });
     const [commonAvailability, setCommonAvailability] = useState<{ start: Date; end: Date; }[]>([
         { start: new Date(2024, 9, 8, 10, 0), end: new Date(2024, 9, 8, 12, 0) },
         { start: new Date(2024, 9, 9, 14, 0), end: new Date(2024, 9, 9, 16, 0) },
@@ -79,6 +37,15 @@ export default function CirclePage() {
         { start: new Date(2024, 9, 12, 13, 0), end: new Date(2024, 9, 12, 15, 0) },
         { start: new Date(2024, 9, 14, 15, 0), end: new Date(2024, 9, 14, 18, 0) },
     ]);
+    const [newEvent, setNewEvent] = useState({
+        name: '',
+        date: '',
+        start_time: '',
+        end_time: '',
+        description: '',
+        allowPlusOne: false
+    });
+    const router = useRouter();
 
     useEffect(() => {
         const fetchCircleData = async () => {
@@ -93,8 +60,23 @@ export default function CirclePage() {
                         ...data[0].group,
                         members: data.map((item: any) => item.person)
                     });
-                    // Here you would update pageData with real data from the API
-                    // setPageData({ ... });
+
+                    // Fetch events for this circle
+                    const eventsResponse = await fetch(`/api/events?groupId=${id}`);
+                    if (!eventsResponse.ok) {
+                        throw new Error('Failed to fetch events data');
+                    }
+                    const eventsData: Event[] = await eventsResponse.json();
+
+                    const now = new Date();
+                    const upcomingEvents = eventsData.filter(event => new Date(event.start_timestamp) > now);
+                    const pastEvents = eventsData.filter(event => new Date(event.end_timestamp) <= now);
+
+                    setPageData({
+                        upcomingEvents,
+                        suggestedEvents: [], // You might want to implement a suggestion algorithm here
+                        pastEvents
+                    });
                 }
             } catch (error) {
                 console.error('Error fetching circle data:', error);
@@ -105,6 +87,82 @@ export default function CirclePage() {
 
         fetchCircleData();
     }, [id]);
+
+    // Add this helper function at the beginning of the component
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear().toString().slice(-2)} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const { name, value, type } = e.target;
+        setNewEvent(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+        }));
+    };
+
+    const handleCreateEvent = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const { date, start_time, end_time, ...restEventData } = newEvent;
+            const start_timestamp = new Date(`${date}T${start_time}`).toISOString();
+            const end_timestamp = new Date(`${date}T${end_time}`).toISOString();
+
+            const response = await fetch('/api/events', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    groupId: id,
+                    ...restEventData,
+                    start_timestamp,
+                    end_timestamp
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to create event');
+            }
+
+            const { event: createdEvent } = await response.json();
+
+            // Update the state with the new event
+            setPageData(prevData => {
+                const now = new Date();
+                const isUpcoming = new Date(createdEvent.start_timestamp) > now;
+                
+                if (isUpcoming) {
+                    return {
+                        ...prevData,
+                        upcomingEvents: [...prevData.upcomingEvents, createdEvent].sort((a, b) => 
+                            new Date(a.start_timestamp).getTime() - new Date(b.start_timestamp).getTime()
+                        )
+                    };
+                } else {
+                    return {
+                        ...prevData,
+                        pastEvents: [...prevData.pastEvents, createdEvent].sort((a, b) => 
+                            new Date(b.end_timestamp).getTime() - new Date(a.end_timestamp).getTime()
+                        )
+                    };
+                }
+            });
+
+            // Reset form
+            setNewEvent({
+                name: '',
+                date: '',
+                start_time: '',
+                end_time: '',
+                description: '',
+                allowPlusOne: false
+            });
+        } catch (error) {
+            console.error('Error creating event:', error);
+        }
+    };
 
     if (isLoading) {
         return <Spinner />;
@@ -120,22 +178,25 @@ export default function CirclePage() {
             <div className="container mx-auto flex flex-col gap-y-10 py-16">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div>
-                        <h1 className="text-3xl font-medium mb-2">{pageData.name}</h1>
-                        <div className="text-base text-[#9C9C9C] mb-6 flex justify-between"><span>{pageData.members.join(", ")}</span>
+                        <h1 className="text-3xl font-medium mb-2">{circle.name}</h1>
+                        <div className="text-base text-[#9C9C9C] mb-6 flex justify-between">
+                            <span>{circle.members.map(member => member.full_name).join(", ")}</span>
                             <Button variant="link" className="p-0 h-auto text-[#B5B5B5]">Edit</Button>
                         </div>
-
 
                         <div className="flex flex-col gap-y-8">
                             <div>
                                 <h2 className="text-base font-semibold mb-2 uppercase">Upcoming Events</h2>
                                 <div className="mb-6">
-                                    {pageData.upcomingEvents.map((event, index) => (
-                                        <div key={index} className="flex items-center justify-between mb-2">
-                                            <Badge className="bg-[#98A3F6] text-white mr-2">
-                                                <span className="text-xs">{`${event.date}, ${event.time}`}</span>
-                                            </Badge>
-                                            <span className="text-xs text-[#9C9C9C]">{event.status}</span>
+                                    {pageData.upcomingEvents.map((event) => (
+                                        <div key={event.event_id} className="flex items-center justify-between mb-2">
+                                            <div className="flex items-center">
+                                                <Badge className="bg-[#98A3F6] text-white mr-2">
+                                                    <span className="text-xs">{`${formatDate(event.start_timestamp)} - ${formatDate(event.end_timestamp).split(' ')[1]}`}</span>
+                                                </Badge>
+                                                <span className="font-medium text-base">{event.name}</span>
+                                            </div>
+                                            <span className="text-xs text-[#9C9C9C]">IN {Math.ceil((new Date(event.start_timestamp).getTime() - new Date().getTime()) / (1000 * 3600 * 24))} DAYS</span>
                                         </div>
                                     ))}
                                 </div>
@@ -143,13 +204,13 @@ export default function CirclePage() {
 
                             <div>
                                 <h2 className="text-base font-semibold mb-2 uppercase">Suggested Events</h2>
-                                {pageData.suggestedEvents.map((event, index) => (
-                                    <div key={index} className="flex items-center justify-between space-y-1">
+                                {pageData.suggestedEvents.map((event) => (
+                                    <div key={event.event_id} className="flex items-center justify-between space-y-1">
                                         <div className="flex items-center">
                                             <Badge className="bg-[#CACBCC] text-white mr-2">
-                                                <span className="text-xs">{`${event.date}, ${event.time}`}</span>
+                                                <span className="text-xs">{`${formatDate(event.start_timestamp)} - ${formatDate(event.end_timestamp).split(' ')[1]}`}</span>
                                             </Badge>
-                                            <span className="font-medium text-base">{event.title}</span>
+                                            <span className="font-medium text-base">{event.name}</span>
                                         </div>
                                         <Button variant="default" size="sm">Send Invite</Button>
                                     </div>
@@ -161,41 +222,76 @@ export default function CirclePage() {
                                 <div>
                                     <h3 className="text-2xl font-medium mb-2">New Event</h3>
                                     <p className="text-base text-[#9C9C9C] mb-2">Choose based on your availabilities and recommendations.</p>
-                                    <form className="space-y-4">
+                                    <form onSubmit={handleCreateEvent} className="space-y-4">
                                         <div>
-                                            <label className="block text-base font-medium mb-1">Pick a date</label>
-                                            <select className="w-full p-2 border rounded">
-                                                <option>Select date</option>
-                                            </select>
+                                            <label className="block text-base font-medium mb-1">Event Name</label>
+                                            <input
+                                                type="text"
+                                                name="name"
+                                                value={newEvent.name}
+                                                onChange={handleInputChange}
+                                                className="w-full p-2 border rounded"
+                                                required
+                                            />
                                         </div>
                                         <div>
-                                            <label className="block text-base font-medium mb-1">Pick a time</label>
-                                            <div className="flex space-x-2">
-                                                <select className="w-1/2 p-2 border rounded">
-                                                    <option>Start time</option>
-                                                </select>
-                                                <select className="w-1/2 p-2 border rounded">
-                                                    <option>End time</option>
-                                                </select>
+                                            <label className="block text-base font-medium mb-1">Date</label>
+                                            <input
+                                                type="date"
+                                                name="date"
+                                                value={newEvent.date}
+                                                onChange={handleInputChange}
+                                                className="w-full p-2 border rounded"
+                                                required
+                                            />
+                                        </div>
+                                        <div className="flex space-x-4">
+                                            <div className="flex-1">
+                                                <label className="block text-base font-medium mb-1">Start Time</label>
+                                                <input
+                                                    type="time"
+                                                    name="start_time"
+                                                    value={newEvent.start_time}
+                                                    onChange={handleInputChange}
+                                                    className="w-full p-2 border rounded"
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="flex-1">
+                                                <label className="block text-base font-medium mb-1">End Time</label>
+                                                <input
+                                                    type="time"
+                                                    name="end_time"
+                                                    value={newEvent.end_time}
+                                                    onChange={handleInputChange}
+                                                    className="w-full p-2 border rounded"
+                                                    required
+                                                />
                                             </div>
                                         </div>
                                         <div>
-                                            <label className="block text-base font-medium mb-1">Choose activity (based on your shared interests)</label>
-                                            <select className="w-full p-2 border rounded">
-                                                <option>Select activity</option>
-                                            </select>
-                                        </div>
-                                        <div>
                                             <label className="block text-base font-medium mb-1">Event Description</label>
-                                            <textarea className="w-full p-2 border rounded" placeholder="Add description..."></textarea>
+                                            <textarea
+                                                name="description"
+                                                value={newEvent.description}
+                                                onChange={handleInputChange}
+                                                className="w-full p-2 border rounded"
+                                                placeholder="Add description..."
+                                            ></textarea>
                                         </div>
                                         <div className="flex items-center">
-                                            <input type="checkbox" id="plusOne" className="mr-2" />
-                                            <label htmlFor="plusOne" className="text-base">Guests can bring a plus one</label>
+                                            <input
+                                                type="checkbox"
+                                                id="allowPlusOne"
+                                                name="allowPlusOne"
+                                                checked={newEvent.allowPlusOne}
+                                                onChange={handleInputChange}
+                                                className="mr-2"
+                                            />
+                                            <label htmlFor="allowPlusOne" className="text-base">Guests can bring a plus one</label>
                                         </div>
                                         <div className="flex gap-x-2">
-                                            <Button variant="outline">Back</Button>
-                                            <Button>Send invite</Button>
+                                            <Button type="submit">Create Event</Button>
                                         </div>
                                     </form>
                                 </div>
@@ -206,35 +302,24 @@ export default function CirclePage() {
                     <div className="lg:mt-[0.85rem]">
                         <h2 className="text-base font-semibold mb-2 uppercase">Availability Notifications</h2>
                         <div className="mb-6 flex justify-between items-center">
-                            <p className="font-light text-base">{pageData.availabilityNotification}</p>
+                            <p className="font-light text-base">Email weekly with common availabilities for the next week</p>
                             <Button variant="link" className="p-0 h-auto text-[#B5B5B5]">Edit</Button>
                         </div>
 
                         <h2 className="text-base font-semibold mb-2 uppercase">Common Availability</h2>
                         <WeeklyCalendar startDate={new Date()} commonAvailability={commonAvailability} />
                     </div>
-
                 </div>
 
                 <div className="flex flex-col">
                     <h3 className="text-2xl font-medium mb-4">Past Events</h3>
-                    <div className="flex space-x-2 overflow-x-auto pb-4">
-                        {pageData.pastEvents.map((event, index) => (
-                            <EventCard key={index} eventAttendance={{
-                                event: {
-                                    event_id: index.toString(),
-                                    group_id: circle.group_id,
-                                    name: event.title,
-                                    creation_timestamp: "2024-01-01",
-                                    start_timestamp: "2024-01-01",
-                                    end_timestamp: "2024-01-01",
-                                },
+                    <div className="grid grid-cols-5 space-x-2 overflow-x-auto pb-4">
+                        {pageData.pastEvents.map((event) => (
+                            <EventCard key={event.event_id} eventAttendance={{
+                                event: event,
                                 group: circle,
-                                attending: index === 0 ? true : false
+                                attending: false // You might want to fetch actual attendance data
                             }} />
-                            // <div key={index} className={`flex-shrink-0 w-24 h-24 rounded ${index === 0 ? 'bg-blue-500' : 'bg-gray-200'} flex items-end p-2`}>
-                            //     <span className="text-xs text-white">{`${event.date}, ${event.time}`}</span>
-                            // </div>
                         ))}
                     </div>
                 </div>

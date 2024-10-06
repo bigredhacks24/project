@@ -23,8 +23,8 @@ const EventCarousel: React.FC<EventCarouselProps> = ({ events, onEventClick }) =
   };
 
   return (
-    <div className="relative flex items-start gap-3 self-stretch">
-      <div className="flex h-[313px] items-start gap-3 self-stretch overflow-hidden">
+    <div className={`relative grid items-start gap-3 self-stretch`}>
+      <div className="grid grid-cols-5 items-start gap-3">
         {currentEvents.map((event: EventWithAttendance) => (
           <div key={event.event_id} onClick={() => onEventClick(event)}>
             <EventCard eventWithAttendance={event} />
@@ -56,4 +56,4 @@ const EventCarousel: React.FC<EventCarouselProps> = ({ events, onEventClick }) =
   );
 };
 
-export default EventCarousel;
+export default EventCarousel;;

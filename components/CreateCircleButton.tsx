@@ -4,8 +4,6 @@ import { useState } from "react";
 import type { Person } from "@/types/general-types";
 import { Button } from "@/components/ui/button"; // Importing Button for consistent UI
 import CreateCircleModal from "./CreateCircleModal";
-import { Button } from "./ui/button";
-import { PlusIcon } from "lucide-react";
 
 export default function CreateCircleButton() {
   const [isModalOpen, setIsModalOpen] = useState(false);

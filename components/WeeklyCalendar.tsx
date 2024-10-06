@@ -7,7 +7,7 @@ interface AvailabilityBlock {
 
 interface WeeklyCalendarProps {
   startDate: Date;
-  commonAvailability: AvailabilityBlock[];
+  commonAvailability: { [key: string]: AvailabilityBlock[] }; // Expecting an object with days as keys
 }
 
 const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ startDate, commonAvailability }) => {
@@ -84,37 +84,17 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ startDate, commonAvaila
 
     // Draw availability blocks
     ctx.fillStyle = 'rgba(150, 150, 150, 0.5)';
-    commonAvailability.forEach(block => {
-      const daysDiff = Math.floor((block.start.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-      if (daysDiff >= 0 && daysDiff < 7) {
-        const startHour = block.start.getHours();
-        const endHour = block.end.getHours();
-        
-        if (startHour >= 9 && endHour <= 24) {
-          const startY = 60 + (startHour - 9 + block.start.getMinutes() / 60) * hourHeight;
-          const endY = 60 + (endHour - 9 + block.end.getMinutes() / 60) * hourHeight;
-          
-          // Draw rounded rectangle
-          const radius = 5;
-          const x = leftPadding + daysDiff * dayWidth;
-          const y = startY;
-          const width = dayWidth;
-          const height = endY - startY;
-          
-          ctx.beginPath();
-          ctx.moveTo(x + radius, y);
-          ctx.lineTo(x + width - radius, y);
-          ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-          ctx.lineTo(x + width, y + height - radius);
-          ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-          ctx.lineTo(x + radius, y + height);
-          ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-          ctx.lineTo(x, y + radius);
-          ctx.quadraticCurveTo(x, y, x + radius, y);
-          ctx.closePath();
-          ctx.fill();
+    Object.entries(commonAvailability).forEach(([day, blocks]) => {
+      blocks.forEach(block => {
+        const daysDiff = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].indexOf(day);
+        if (daysDiff >= 0 && daysDiff < 7) {
+          const startHour = new Date(block.start).getHours();
+          const endHour = new Date(block.end).getHours();
+          const startY = 60 + (startHour - 9) * hourHeight;
+          const endY = 60 + (endHour - 9) * hourHeight;
+          ctx.fillRect(leftPadding + daysDiff * dayWidth, startY, dayWidth, endY - startY);
         }
-      }
+      });
     });
 
   }, [startDate, commonAvailability]);

@@ -3,6 +3,8 @@
 import { useState } from "react";
 import type { Person } from "@/types/general-types";
 import CreateCircleModal from "./CreateCircleModal";
+import { Button } from "./ui/button";
+import { PlusIcon } from "lucide-react";
 
 export default function CreateCircleButton() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -15,18 +17,15 @@ export default function CreateCircleButton() {
   };
 
   return (
-    <>
-      <button
-        onClick={() => setIsModalOpen(true)}
-        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-      >
+    <div className="-mt-2">
+      <Button onClick={() => setIsModalOpen(true)}>
         Create Circle
-      </button>
+      </Button>
       <CreateCircleModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onCreate={handleCreateCircle}
       />
-    </>
+    </div>
   );
 }

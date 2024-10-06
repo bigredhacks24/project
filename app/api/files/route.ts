@@ -1,14 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { pinata } from "@/utils/config";
 
-// export const config = {
-//     api: {
-//         bodyParser: false,
-//     },
-// };
-
-async function getOrCreateUserGroup(userId: string) {
-    const groupName = `user_${userId}_group`;
+async function getOrCreateEventGroup(eventId: string) {
+    const groupName = `event_${eventId}_group`;
     let group;
 
     // Try to find an existing group
@@ -28,26 +22,33 @@ async function getOrCreateUserGroup(userId: string) {
 
 export async function POST(request: NextRequest) {
     try {
-        const userId = request.nextUrl.searchParams.get('userId');
-        if (!userId) {
-            return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+        const eventId = request.nextUrl.searchParams.get('eventId');
+        const isThumbnail = request.nextUrl.searchParams.get('thumbnail') === 'true';
+
+        if (!eventId) {
+            return NextResponse.json({ error: "Event ID is required" }, { status: 400 });
         }
 
-        const groupId = await getOrCreateUserGroup(userId);
+        const groupId = await getOrCreateEventGroup(eventId);
 
         const data = await request.formData();
-        const file: File | null = data.get("file") as unknown as File;
+        let file: File | null = data.get("file") as unknown as File;
 
-        const uploadData = await pinata.upload.file(file, {
-            groupId: groupId
-        });
+        const uploadOptions = { groupId: groupId };
+        if (isThumbnail) {
+            // set the file name to 'thumbnail'
+            // create new file object with new name
+            file = new File([file], 'thumbnail', { type: file.type });
+        }
+
+        const uploadData = await pinata.upload.file(file, uploadOptions);
 
         const url = await pinata.gateways.createSignedURL({
             cid: uploadData.cid,
             expires: 3600,
         });
 
-        return NextResponse.json({ url, cid: uploadData.cid }, { status: 200 });
+        return NextResponse.json({ url, cid: uploadData.cid, isThumbnail }, { status: 200 });
     } catch (e) {
         console.log(e);
         return NextResponse.json(
@@ -59,23 +60,21 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
     try {
-        const userId = request.nextUrl.searchParams.get('userId');
-        if (!userId) {
-            return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+        const eventId = request.nextUrl.searchParams.get('eventId');
+        if (!eventId) {
+            return NextResponse.json({ error: "Event ID is required" }, { status: 400 });
         }
 
-        const groupId = await getOrCreateUserGroup(userId);
+        const groupId = await getOrCreateEventGroup(eventId);
 
-        const {
-            files
-        } = await pinata.files.list().group(groupId);
+        const { files } = await pinata.files.list().group(groupId);
 
         const fileUrls = await Promise.all(files.map(async (file) => {
             const url = await pinata.gateways.createSignedURL({
                 cid: file.cid,
                 expires: 3600,
             });
-            return { url, cid: file.cid };
+            return { url, cid: file.cid, isThumbnail: file.name === 'thumbnail' };
         }));
 
         return NextResponse.json(fileUrls, { status: 200 });

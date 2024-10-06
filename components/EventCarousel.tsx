@@ -2,22 +2,14 @@
 
 import React, { useState } from 'react';
 import EventCard from "@/components/EventCard";
-
-interface EventWithAttendance {
-  event_id: string;
-  group_id: string | null;
-  name: string;
-  creation_timestamp: string;
-  start_timestamp: string;
-  end_timestamp: string;
-  event_person_attendance: { attending: boolean | null }[];
-}
+import { EventWithAttendance } from "@/types/general-types";
 
 interface EventCarouselProps {
   events: EventWithAttendance[];
+  onEventClick: (event: EventWithAttendance) => void;
 }
 
-const EventCarousel: React.FC<EventCarouselProps> = ({ events }) => {
+const EventCarousel: React.FC<EventCarouselProps> = ({ events, onEventClick }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const eventsPerPage = 5;
 
@@ -31,35 +23,18 @@ const EventCarousel: React.FC<EventCarouselProps> = ({ events }) => {
   };
 
   return (
-    <div className="relative flex items-start gap-3 self-stretch">
-      <div className="flex h-[313px] items-start gap-3 self-stretch overflow-hidden">
+    <div className={`relative grid items-start gap-3 self-stretch`}>
+      <div className="grid grid-cols-5 items-start gap-3">
         {currentEvents.map((event: EventWithAttendance) => (
-          <EventCard key={event.event_id} eventAttendance={event} />
+          <div key={event.event_id} onClick={() => onEventClick(event)}>
+            <EventCard eventWithAttendance={event} />
+          </div>
         ))}
       </div>
-      {events.length > eventsPerPage && (
-        <button
-          onClick={nextPage}
-          className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-md"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </button>
-      )}
+
+      
     </div>
   );
 };
 
-export default EventCarousel;
+export default EventCarousel;;

@@ -55,10 +55,15 @@ export default function CirclePage() {
     description: "",
     allowPlusOne: false,
   });
-  const router = useRouter();
+
+  let lastFetchedID = "";
 
   useEffect(() => {
-    const fetchCircleData = async () => {
+        const fetchCircleData = async () => {
+        if (lastFetchedID === id) {
+            return;
+        }
+        lastFetchedID = typeof id === 'string' ? id : id[0];
       try {
         const response = await fetch(`/api/groups?groupId=${id}`);
         if (!response.ok) {

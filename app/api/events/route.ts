@@ -5,35 +5,48 @@ import { NextResponse } from "next/server";
 export async function GET(req: Request) {
   const supabase = createClient();
   const url = new URL(req.url);
-  const personId = url.searchParams.get("personId");
+  const groupId = url.searchParams.get("groupId");
 
-  const { data: events, error } = await supabase
-    .from("event_person_attendance")
-    .select(
-      `
-        event: event_id (
-          *,
-          group: group_id (*)
-        ),
-        attending
-      `
-    )
-    .eq("event_person_attendance.person_id", personId!);
+  if (!groupId) {
+    return NextResponse.json({ error: "Missing groupId" }, { status: 400 });
+  }
 
+  const { data, error } = await supabase
+    .from("event")
+    .select(`
+      *,
+      group:group_id(*),
+      event_person_attendance(
+        person:person_id(full_name, email)
+      )
+    `)
+    .eq("group_id", groupId)
+    .order("start_timestamp", { ascending: true });
 
   if (error) {
-    console.error("Error fetching events:", error.message);
-
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json(events, { status: 200 });
+  return NextResponse.json(data, { status: 200 });
 }
 
 // Create a new event and add all group members to event_person_attendance
 export async function POST(req: Request) {
   const supabase = createClient();
-  const { groupId, name, start_timestamp, end_timestamp } = await req.json();
+  const { groupId, name, start_timestamp, end_timestamp, description, allowPlusOne } = await req.json();
+
+  // Validate that start and end times are on the same date
+  const startDate = new Date(start_timestamp).toDateString();
+  const endDate = new Date(end_timestamp).toDateString();
+  if (startDate !== endDate) {
+    return NextResponse.json({ error: "Start and end times must be on the same date" }, { status: 400 });
+  }
+
+  // Get the current user's ID (you might need to implement this based on your authentication setup)
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError) {
+    return NextResponse.json({ error: userError.message }, { status: 401 });
+  }
 
   // Fetch all members of the group (group_person table)
   const { data: groupMembers, error: groupMembersError } = await supabase
@@ -65,6 +78,8 @@ export async function POST(req: Request) {
         start_timestamp: start_timestamp,
         end_timestamp: end_timestamp,
         creation_timestamp: new Date().toISOString(),
+        description: description,
+        // allow_plus_one: allowPlusOne, // TODO: show suggestions clientside
       },
     ])
     .select("*")
@@ -74,12 +89,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: eventError.message }, { status: 500 });
   }
 
-  // Prepare the entries for the 'event_person_attendance' table (adding all group members as attendees)
+  if (!user) {
+    return NextResponse.json({ error: "User not found" }, { status: 401 });
+  }
+
+  // Prepare the entries for the 'event_person_attendance' table
   const attendanceEntries = groupMembers.map(
     (member: { person_id: string }) => ({
       event_id: newEvent.event_id,
       person_id: member.person_id,
-      attending: true, // Automatically mark them as attending by default
+      attending: member.person_id === user.id, // Set to true only for the creator
     })
   );
 

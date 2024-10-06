@@ -297,7 +297,7 @@ export default function CirclePage() {
   // Add this helper function at the beginning of the component
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1).toString().padStart(2, "0")}/${date.getFullYear().toString().slice(-2)} ${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
+    return `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1).toString().padStart(2, "0")}/${date.getFullYear().toString().slice(-2)} ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
   };
 
   const handleInputChange = (
@@ -518,10 +518,10 @@ View more at <a href="https://findcircles.co/group/${circle.group_id}">Circles</
 
       // Create start and end Date objects
       const startTimestamp = new Date(eventDate);
-      startTimestamp.setHours(startHours, startMinutes, 0, 0);
+      startTimestamp.setHours(startHours - 4, startMinutes, 0, 0);
 
       const endTimestamp = new Date(eventDate);
-      endTimestamp.setHours(endHours, endMinutes, 0, 0);
+      endTimestamp.setHours(endHours - 4, endMinutes, 0, 0);
 
       const response = await fetch("/api/events", {
         method: "POST",

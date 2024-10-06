@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import Spinner from '@/components/Spinner';
 import FileUploadAndGallery from "@/components/FileUploadAndGallery";
 import type { EventWithAttendance } from '@/types/general-types';
+import { getColorFromString } from '@/utils/utils';
 
 // New component for formatting event time
 const formatEventTime = (start: string, end: string) => {
@@ -28,16 +29,6 @@ const formatEventTime = (start: string, end: string) => {
     const formattedEndTime = endDate.toLocaleTimeString('en-US', timeOptions);
 
     return `${formattedDate}, ${formattedStartTime} - ${formattedEndTime}`;
-};
-
-// Add this new function at the top of the file, after the imports
-const getColorFromString = (str: string) => {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const color = Math.floor(Math.abs(Math.sin(hash) * 16777215)).toString(16);
-    return '#' + '0'.repeat(6 - color.length) + color;
 };
 
 export default function Memories() {

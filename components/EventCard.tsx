@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import type { EventWithAttendance } from "@/types/general-types";
 import { createClient } from "@/utils/supabase/client";
 import { Check } from "lucide-react";
+import { getColorFromString } from "@/utils/utils";
 
 interface EventCardProps {
   eventWithAttendance: EventWithAttendance;
@@ -104,11 +105,15 @@ const EventCard: React.FC<EventCardProps> = ({ eventWithAttendance }) => {
     }
   };
 
+  // Get the background color based on the group name
+  const groupColor = eventWithAttendance.group ? getColorFromString(eventWithAttendance.group.name) : '#5D6DEB';
+
   return (
     <div className="relative flex flex-col items-start gap-[16px] rounded-[6px] border border-[#E4E4E7] bg-white shadow-[0px_4px_6px_-1px_rgba(0,0,0,0.10),0px_2px_4px_-2px_rgba(0,0,0,0.10)] cursor-pointer overflow-hidden">
       <div 
-        className="w-full h-48 bg-[#5D6DEB] overflow-hidden"
+        className="w-full h-48 overflow-hidden"
         style={{
+          backgroundColor: groupColor,
           backgroundImage: thumbnail ? `url(${thumbnail})` : 'none',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
@@ -123,7 +128,7 @@ const EventCard: React.FC<EventCardProps> = ({ eventWithAttendance }) => {
             {eventTime}
           </div>
           <div className="flex items-center gap-1 self-stretch mt-2">
-            <div className="w-4 h-4 rounded-full bg-[#5D6DEB]" />
+            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: groupColor }} />
             <div className="text-[#71717A] font-inter text-xs font-normal leading-[1.2]">
               {eventWithAttendance.group?.name}
             </div>

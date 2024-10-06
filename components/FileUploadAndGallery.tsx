@@ -143,8 +143,8 @@ export default function FileUploadAndGallery({ event }: FileUploadAndGalleryProp
 
             <div className="pl-5">
                 <div>
-                    <h3 className="text-lg font-semibold mb-2 colored">Upload Media</h3>
-                    <p className="text-gray-400 mb-2 -mt-1">Add pics from <span className="font-semibold">{event.name}</span>!</p>
+                    <h3 className="text-lg font-semibold mb-2 colored uppercase">Upload Media</h3>
+                    <p className="text-gray-400 mb-2 -mt-1 text-sm">Add pics from <span className="font-semibold">{event.name}</span>!</p>
                     <Input
                         id="galleryInput"
                         type="file"

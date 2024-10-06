@@ -238,9 +238,6 @@ export default function Home() {
 
         <Dialog open={!!selectedEventWithAttendance} onOpenChange={() => setSelectedEventWithAttendance(null)}>
           <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Event Files</DialogTitle>
-            </DialogHeader>
             {selectedEventWithAttendance && <FileUploadAndGallery event={selectedEventWithAttendance} />}
           </DialogContent>
         </Dialog>

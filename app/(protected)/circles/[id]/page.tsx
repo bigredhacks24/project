@@ -8,8 +8,12 @@ import EventCard from "@/components/EventCard";
 import Spinner from "@/components/Spinner";
 import WeeklyCalendar from "@/components/WeeklyCalendar";
 import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Check } from "lucide-react";
 import { sendEmail } from "@/utils/email";
+import { getColorFromString } from "@/utils/utils";
+import QuickScheduleModal from "@/components/QuickScheduleModal";
+import { count } from "console";
+
 // import mailgun from 'mailgun-js';
 // import mailcomposer from "mailcomposer";
 type CircleData = Database["public"]["Tables"]["group"]["Row"] & {
@@ -48,6 +52,24 @@ export default function CirclePage() {
   const [emailButtonClicked, setEmailButtonClicked] = useState(false);
   const [circle, setCircle] = useState<CircleData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isQuickScheduleModalOpen, setIsQuickScheduleModalOpen] =
+    useState(false);
+  const [scheduledRecommendations, setScheduledRecommendations] = useState<
+    Set<string>
+  >(new Set());
+  const [quickScheduleInitialData, setQuickScheduleInitialData] = useState({
+    name: "",
+    inviteCircle: "",
+    date: "",
+    duration: "",
+    startTime: "",
+    endTime: "",
+  });
+  const [currentRecommendation, setCurrentRecommendation] = useState<{
+    text: string;
+    time: string;
+  } | null>(null);
+
   const [pageData, setPageData] = useState<CirclePageData>({
     upcomingEvents: [],
     suggestedEvents: [],
@@ -158,14 +180,14 @@ export default function CirclePage() {
             endHour >= 17.5 &&
             endHour <= 20
           ) {
-            recommendation = "🍽️ Grab dinner?";
+            recommendation = "Grab dinner? 🍽️";
           } else if (
             startHour >= 11 &&
             startHour <= 12.5 &&
             endHour >= 11.5 &&
             endHour <= 13.5
           ) {
-            recommendation = "Grab lunch?";
+            recommendation = "Grab lunch? 🍔";
           } else if (
             startHour >= 19 &&
             startHour <= 22.5 &&
@@ -173,18 +195,18 @@ export default function CirclePage() {
             endHour <= 23.98
           ) {
             recommendation =
-              Math.random() < 0.5 ? "Watch a movie?" : "Game night?";
+              Math.random() < 0.5 ? "Watch a movie? 🎬" : "Game night? 🎮";
           } else if (
             isWeekend &&
             ((startHour >= 6 && startHour <= 11) ||
               (startHour >= 12 && startHour <= 17))
           ) {
             const weekendActivities = [
-              "Play pickleball!",
-              "Tennis era?",
-              "Cafe crawl?",
-              "Lynah rink skating?",
-              "Picnic on the slope",
+              "Play pickleball! 🏓",
+              "Tennis era? 🎾",
+              "Cafe crawl? ☕",
+              "Lynah rink skating? ⛸️",
+              "Picnic on the slope 🧺",
             ];
             recommendation =
               weekendActivities[
@@ -292,7 +314,7 @@ export default function CirclePage() {
   // Add this helper function at the beginning of the component
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1).toString().padStart(2, "0")}/${date.getFullYear().toString().slice(-2)} ${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
+    return `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1).toString().padStart(2, "0")}/${date.getFullYear().toString().slice(-2)} ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
   };
 
   const handleInputChange = (
@@ -433,6 +455,129 @@ View more at <a href="https://findcircles.co/group/${circle.group_id}">Circles</
       .map((rec) => `<strong>${rec.text}</strong>: ${rec.times.join(", ")}`)
       .join("\n\n");
   };
+  const getNextOccurrence = (dayName: string) => {
+    const days = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+    const today = new Date();
+    const targetDay = days.indexOf(dayName);
+    const daysUntilTarget = (targetDay + 7 - today.getDay()) % 7;
+    const nextOccurrence = new Date(
+      today.getTime() + daysUntilTarget * 24 * 60 * 60 * 1000
+    );
+    return nextOccurrence;
+  };
+
+  const handleQuickSchedule = (
+    recommendation: Recommendation,
+    time: string
+  ) => {
+    // Parse the time string
+    const match = time.match(
+      /(\w+) (\d{1,2}:\d{2} [AP]M) - (\d{1,2}:\d{2} [AP]M)/
+    );
+    if (!match) {
+      console.error("Invalid time format");
+      return;
+    }
+
+    const [_, day, startTime, endTime] = match;
+    const date = getNextOccurrence(day);
+
+    // Parse start and end times
+    const parseTime = (timeStr: string) => {
+      const [time, period] = timeStr.split(" ");
+      const [hours, minutes] = time.split(":");
+      let parsedHours = parseInt(hours);
+      if (period === "PM" && parsedHours !== 12) parsedHours += 12;
+      if (period === "AM" && parsedHours === 12) parsedHours = 0;
+      return { hours: parsedHours, minutes: parseInt(minutes) };
+    };
+
+    const start = parseTime(startTime);
+    const end = parseTime(endTime);
+
+    // Calculate duration in minutes
+    const duration =
+      (end.hours - start.hours) * 60 + (end.minutes - start.minutes);
+
+    // Format times for the initialData
+    const formatTime = (time: { hours: number; minutes: number }) => {
+      return `${time.hours.toString().padStart(2, "0")}:${time.minutes.toString().padStart(2, "0")}`;
+    };
+
+    setQuickScheduleInitialData({
+      name: recommendation.text,
+      inviteCircle: circle?.group_id || "",
+      date: date.toISOString().split("T")[0],
+      duration: duration.toString(),
+      startTime: formatTime(start),
+      endTime: formatTime(end),
+    });
+
+    setIsQuickScheduleModalOpen(true);
+    setCurrentRecommendation({ text: recommendation.text, time });
+  };
+
+  const handleQuickScheduleSubmit = async (
+    eventData: any,
+    recommendation: string,
+    time: string
+  ) => {
+    try {
+      // Parse the date and time strings
+      const eventDate = new Date(eventData.date);
+      const [startHours, startMinutes] = eventData.startTime
+        .split(":")
+        .map(Number);
+      const [endHours, endMinutes] = eventData.endTime.split(":").map(Number);
+
+      // Create start and end Date objects
+      const startTimestamp = new Date(eventDate);
+      startTimestamp.setHours(startHours - 4, startMinutes, 0, 0);
+
+      const endTimestamp = new Date(eventDate);
+      endTimestamp.setHours(endHours - 4, endMinutes, 0, 0);
+
+      const response = await fetch("/api/events", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          groupId: circle?.group_id,
+          ...eventData,
+          start_timestamp: startTimestamp.toISOString(),
+          end_timestamp: endTimestamp.toISOString(),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create event");
+      }
+
+      const { event: createdEvent } = await response.json();
+
+      // Update the state with the new event
+      setPageData((prevData) => ({
+        ...prevData,
+        upcomingEvents: [...prevData.upcomingEvents, createdEvent].sort(
+          (a, b) =>
+            new Date(a.start_timestamp).getTime() -
+            new Date(b.start_timestamp).getTime()
+        ),
+      }));
+
+      // Mark this recommendation as scheduled
+      setScheduledRecommendations((prev) =>
+        new Set(prev).add(`${recommendation}-${time}`)
+      );
 
   const handlePlusOneChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const isChecked = e.target.checked;
@@ -511,6 +656,12 @@ View more at <a href="https://findcircles.co/group/${circle.group_id}">Circles</
     }
   };
 
+      setIsQuickScheduleModalOpen(false);
+    } catch (error) {
+      console.error("Error creating event:", error);
+      alert("Failed to create event. Please try again.");
+    }
+  };
   if (isLoading) {
     return <Spinner />;
   }
@@ -583,24 +734,44 @@ View more at <a href="https://findcircles.co/group/${circle.group_id}">Circles</
                         {recommendation.text}
                       </span>
                       <div className="flex flex-col items-end">
-                        {recommendation.times.map((time, timeIndex) => (
-                          <div
-                            key={timeIndex}
-                            className="flex items-center mb-2"
-                          >
-                            <span className="text-sm text-[#9C9C9C] mr-2">
-                              {time}
-                            </span>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="rounded-full px-3 py-1 text-xs font-medium"
+                        {recommendation.times.map((time, timeIndex) => {
+                          const isScheduled = scheduledRecommendations.has(
+                            `${recommendation.text}-${time}`
+                          );
+                          return (
+                            <div
+                              key={timeIndex}
+                              className="flex items-center mb-2"
                             >
-                              <span className="mr-1">Schedule</span>
-                              <ChevronRight className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ))}
+                              <span className="text-sm text-[#9C9C9C] mr-2">
+                                {time}
+                              </span>
+                              {isScheduled ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="rounded-full px-3 py-1 text-xs font-medium bg-green-100 text-green-800"
+                                  disabled
+                                >
+                                  <Check className="h-3 w-3 mr-1" />
+                                  <span>Invite Sent</span>
+                                </Button>
+                              ) : (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="rounded-full px-3 py-1 text-xs font-medium"
+                                  onClick={() =>
+                                    handleQuickSchedule(recommendation, time)
+                                  }
+                                >
+                                  <span className="mr-1">Schedule</span>
+                                  <ChevronRight className="h-3 w-3" />
+                                </Button>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -729,12 +900,10 @@ View more at <a href="https://findcircles.co/group/${circle.group_id}">Circles</
               Availability Notifications
             </h2>
             <div className="mb-6 flex justify-between items-center">
-              <p className="font-light text-base">
-                Email weekly with common availabilities for the next week
+              <p className="font-light text-base ">
+                Emails weekly with common availabilities for the next week
               </p>
-              <Button variant="link" className="p-0 h-auto text-[#B5B5B5]">
-                Edit
-              </Button>
+
               <Button
                 onClick={handleEmailButtonClicked}
                 disabled={emailButtonClicked}
@@ -770,6 +939,33 @@ View more at <a href="https://findcircles.co/group/${circle.group_id}">Circles</
           </div>
         </div>
       </div>
+      {circle && (
+        <QuickScheduleModal
+          isOpen={isQuickScheduleModalOpen}
+          onClose={() => setIsQuickScheduleModalOpen(false)}
+          onSubmit={(eventData) => {
+            if (currentRecommendation) {
+              handleQuickScheduleSubmit(
+                eventData,
+                currentRecommendation.text,
+                currentRecommendation.time
+              );
+            }
+          }}
+          initialData={quickScheduleInitialData}
+          group={{
+            ...circle,
+            group_id: circle.group_id || "",
+            name: circle.name || "",
+            members:
+              circle.members?.map((member) => ({
+                ...member,
+                full_name: member.full_name || "",
+              })) || [],
+            event_count: { count: 0 },
+          }}
+        />
+      )}
     </div>
   );
 }

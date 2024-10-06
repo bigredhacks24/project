@@ -13,7 +13,8 @@ const defaultUrl = process.env.VERCEL_URL
 export const metadata = {
   metadataBase: new URL(defaultUrl),
   title: "Circles | Frictionless Friendships",
-  description: "Circles is a platform that makes it easy to stay connected with your friends.",
+  description:
+    "Circles is a platform that makes it easy to stay connected with your friends.",
 };
 
 export default function RootLayout({
@@ -34,21 +35,22 @@ export default function RootLayout({
             <div className="flex-1 flex flex-col items-center">
               <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
                 <div className="w-full flex justify-between items-center py-3 text-sm">
-                  <div className="flex gap-5 items-center font-semibold">
-                  </div>
+                  <div className="flex gap-5 items-center font-semibold"></div>
                   {!hasEnvVars ? <EnvVarWarning /> : <HeaderAuth />}
                 </div>
               </nav>
             </div>
 
             <div className="flex-1 container mx-auto flex flex-col items-center w-full">
-              <div className="flex flex-grow py-10 mb-12 w-full flex-col items-center">                 {/* bottom margin added to address footer overlap temporarily */}
-
+              <div className="flex flex-grow py-10 mb-12 w-full flex-col items-center">
+                {" "}
+                {/* bottom margin added to address footer overlap temporarily */}
                 {children}
               </div>
               <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-sm gap-8 py-8">
                 <p>
-                  Created with 💖 by Temi Abedowale, Valerie Wong, Simon Ilincev, and Jasmine Li
+                  Created with 💖 by Temi Adebowale, Valerie Wong, Simon
+                  Ilincev, and Jasmine Li
                 </p>
                 <ThemeSwitcher />
               </footer>

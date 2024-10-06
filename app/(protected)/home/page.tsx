@@ -52,7 +52,13 @@ export default async function Home() {
   // Fetch groups
   const { data: groups, error: groupsError } = await supabase
     .from("group")
-    .select("*");
+    .select(`
+    *,
+    group_person!inner (person_id)
+    `)
+    .eq("group_person.person_id", user.id);
+    
+console.log("groups: " + groups?.length);
 
   if (eventsError || friendsError || groupsError) {
     console.error(
@@ -63,7 +69,7 @@ export default async function Home() {
   }
 
   return (
-    <div className="flex w-[1222px] h-[881px] flex-col items-start gap-[72px] shrink-0">
+    <div className="flex w-full h-[881px] flex-col items-start gap-[72px] shrink-0">
       <div className="flex flex-col items-start gap-[24px] self-stretch">
         <div className="w-full flex flex-col items-start gap-6">
           <div className="flex p-2.5 justify-center items-center gap-2.5">
@@ -83,12 +89,17 @@ export default async function Home() {
             <CreateCircleButton />
           </div>
           <div className="flex flex-wrap gap-4 w-full">
-            {groups &&
-              groups.map((group: Group) => (
-                <div key={group.group_id} className="w-[calc(33.333%-16px)]">
-                  <CirclesCard group={group} eventCount={0} />
-                </div>
-              ))}
+
+          {Array.isArray(groups) && groups.length > 0 ? (
+     groups.map((group: Group) => (
+       <div key={group.group_id} className="w-[calc(33.333%-16px)]">
+         <CirclesCard group={group} eventCount={0} />
+       </div>
+     ))
+   ) : (
+     <div>No circles found.</div>
+   )}
+
           </div>
         </div>
         <div className="flex flex-col items-start gap-6 flex-[1_0_0]">

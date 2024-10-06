@@ -31,33 +31,16 @@ const EventCarousel: React.FC<EventCarouselProps> = ({ events }) => {
   };
 
   return (
-    <div className="relative flex items-start gap-3 self-stretch">
-      <div className="flex h-[313px] items-start gap-3 self-stretch overflow-hidden">
-        {currentEvents.map((event: EventWithAttendance) => (
-          <EventCard key={event.event_id} eventAttendance={event} />
+    <div className="relative w-full">
+      <div className="flex overflow-x-auto space-x-4 h-[313px] w-full scrollbar-hide">
+      {events.map((event: EventWithAttendance) => (
+          <div key={event.event_id} className="min-w-[calc(100%/5)] shrink-0">
+            <EventCard eventAttendance={event} />
+          </div>
         ))}
       </div>
-      {events.length > eventsPerPage && (
-        <button
-          onClick={nextPage}
-          className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-md"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </button>
-      )}
+
+      
     </div>
   );
 };

@@ -8,7 +8,7 @@ export default function LandingPage() {
       <Hero />
       <main className="flex-1 container mx-auto px-4 py-8">
         <section className="text-center mb-16">
-          <h1 className="text-4xl font-bold mb-4">Welcome to Big Red Hacks</h1>
+          <h1 className="text-4xl font-bold mb-4">Welcome to Circles</h1>
           <p className="text-xl text-gray-600 mb-8">
             Connect with friends, plan events, and create lasting memories.
           </p>
@@ -40,7 +40,7 @@ export default function LandingPage() {
         <section className="text-center">
           <h2 className="text-3xl font-semibold mb-4">Ready to get started?</h2>
           <p className="text-lg text-gray-600 mb-8">
-            Join Big Red Hacks today and start connecting with your friends!
+            Join Circles today and start connecting with your friends!
           </p>
           <Button asChild size="lg">
             <Link href="/sign-up">Sign Up Now</Link>

@@ -9,8 +9,8 @@ export default async function Header() {
   } = await createClient().auth.getUser();
 
   return (
-    <header className="w-full max-w-full bg-white shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="w-full bg-white shadow-sm">
+      <div className="mx-auto px-4 sm:px-6 lg:px-8 w-screen">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <div className="w-6 h-6 bg-gray-300 rounded-full mr-2"></div>
@@ -27,7 +27,7 @@ export default async function Header() {
                 Profile
               </Link>
               <form action={signOutAction}>
-                <Button type="submit" variant="default">
+                <Button type="submit" variant="default" size="sm">
                   Sign Out
                 </Button>
               </form>

@@ -2,22 +2,14 @@
 
 import React, { useState } from 'react';
 import EventCard from "@/components/EventCard";
-
-interface EventWithAttendance {
-  event_id: string;
-  group_id: string | null;
-  name: string;
-  creation_timestamp: string;
-  start_timestamp: string;
-  end_timestamp: string;
-  event_person_attendance: { attending: boolean | null }[];
-}
+import { EventWithAttendance } from "@/types/general-types";
 
 interface EventCarouselProps {
   events: EventWithAttendance[];
+  onEventClick: (event: EventWithAttendance) => void;
 }
 
-const EventCarousel: React.FC<EventCarouselProps> = ({ events }) => {
+const EventCarousel: React.FC<EventCarouselProps> = ({ events, onEventClick }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const eventsPerPage = 5;
 
@@ -31,11 +23,11 @@ const EventCarousel: React.FC<EventCarouselProps> = ({ events }) => {
   };
 
   return (
-    <div className="relative w-full">
-      <div className="flex overflow-x-auto space-x-4 h-[313px] w-full scrollbar-hide">
-      {events.map((event: EventWithAttendance) => (
-          <div key={event.event_id} className="min-w-[calc(100%/5)] shrink-0">
-            <EventCard eventAttendance={event} />
+    <div className={`relative grid items-start gap-3 self-stretch`}>
+      <div className="grid grid-cols-5 items-start gap-3">
+        {currentEvents.map((event: EventWithAttendance) => (
+          <div key={event.event_id} onClick={() => onEventClick(event)}>
+            <EventCard eventWithAttendance={event} />
           </div>
         ))}
       </div>
@@ -45,4 +37,4 @@ const EventCarousel: React.FC<EventCarouselProps> = ({ events }) => {
   );
 };
 
-export default EventCarousel;
+export default EventCarousel;;

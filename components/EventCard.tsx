@@ -1,23 +1,12 @@
-import React from "react";
-import type { EventAttendance } from "@/types/general-types";
-// import type { Database } from "@/types/database.types";
+import React, { useState, useEffect } from "react";
+import type { EventWithAttendance } from "@/types/general-types";
+import { createClient } from "@/utils/supabase/client";
+import { Check } from "lucide-react";
 
-// type EventAttendance = Database["public"]["Tables"]["event"]["Row"];
-
-interface EventWithAttendance {
-  event_id: string;
-  group_id: string | null;
-  name: string;
-  creation_timestamp: string;
-  start_timestamp: string;
-  end_timestamp: string;
-  event_person_attendance: { attending: boolean | null }[];
-}
 interface EventCardProps {
-  eventAttendance: EventWithAttendance;
+  eventWithAttendance: EventWithAttendance;
 }
 
-// Function to format the timestamp into a readable time string
 const formatEventTime = (start: string, end: string) => {
   const startDate = new Date(start);
   const endDate = new Date(end);
@@ -36,68 +25,122 @@ const formatEventTime = (start: string, end: string) => {
   const formattedStartDate = startDate.toLocaleString("en-US", dateOptions);
   const formattedStartTime = startDate
     .toLocaleString("en-US", timeOptions)
-    .replace(/ AM| PM/, "") // Remove AM/PM from start time
-    .replace(/:00$/, ""); // Remove ":00" from start time if it exists
+    .replace(/ AM| PM/, "")
+    .replace(/:00$/, "");
   const formattedEndTime = endDate
     .toLocaleString("en-US", timeOptions)
     .replace(/:00$/, "");
-  console.log("END: " + formattedEndTime);
   return `${formattedStartDate}, ${formattedStartTime} - ${formattedEndTime}`;
 };
 
-const EventCard: React.FC<EventCardProps> = ({ eventAttendance }) => {
+const EventCard: React.FC<EventCardProps> = ({ eventWithAttendance }) => {
+  const [thumbnail, setThumbnail] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAttending, setIsAttending] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUserAndThumbnail = async () => {
+      const supabase = createClient();
+
+      // Fetch current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        console.error("Error fetching user:", userError);
+      } else if (user) {
+        setCurrentUserId(user.id);
+        // Set initial attendance state
+        const userAttendance = eventWithAttendance.event_person_attendance.find(
+          (attendance) => attendance.person.person_id === user.id
+        );
+        setIsAttending(userAttendance?.attending || false);
+      }
+
+      // Fetch thumbnail
+      try {
+        const response = await fetch(`/api/files?eventId=${eventWithAttendance.event_id}`);
+        if (response.ok) {
+          const files = await response.json();
+          const thumbnailFile = files.find((file: any) => file.isThumbnail);
+          if (thumbnailFile) {
+            setThumbnail(thumbnailFile.url);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching thumbnail:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserAndThumbnail();
+  }, [eventWithAttendance.event_id, eventWithAttendance.event_person_attendance]);
+
   const eventTime = formatEventTime(
-    eventAttendance.start_timestamp,
-    eventAttendance.end_timestamp
+    eventWithAttendance.start_timestamp,
+    eventWithAttendance.end_timestamp
   );
 
-  return (
-    <div className="flex p-[18px] flex-col items-start gap-[16px] flex-[1_0_0] self-stretch rounded-[6px] border border-[#E4E4E7] bg-white shadow-[0px_4px_6px_-1px_rgba(0,0,0,0.10),0px_2px_4px_-2px_rgba(0,0,0,0.10)]">
-      <div className="flex items-start gap-[16px] flex-[1_0_0] self-stretch">
-        <div className="flex flex-col justify-center items-start gap-[16px] flex-[1_0_0] self-stretch">
-          <div className="flex p-[12px_11.8px_152px_63px] justify-end items-center flex-[1_0_0] self-stretch rounded-[6px] bg-[#5D6DEB]">
-          </div>
-          <div className="flex flex-col items-start gap-[10px] self-stretch">
-            <div className="flex flex-col items-start gap-[4px] self-stretch">
-              <div className="flex items-start self-stretch">
-                <div className="flex h-5 items-start">
-                  <div className="flex justify-center items-center gap-2.5">
-                    <div className="text-[#09090B] font-inter text-sm font-semibold leading-[1.2]">
-                      <p>{eventAttendance.name}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+  const isUpcoming = new Date(eventWithAttendance.start_timestamp) > new Date();
 
-              <div className="flex flex-col items-start self-stretch">
-                <div className="text-[#09090B] font-inter text-sm font-normal leading-[1.4]">
-                  <p>{eventTime}</p>
-                </div>
-              </div>
-              <div className="flex pt-2 items-center gap-1 self-stretch">
-                <div className="flex w-4 h-4 pr-2 flex-col items-start">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 16 16"
-                    fill="none"
-                  >
-                    <circle cx="8" cy="8" r="8" fill="#5D6DEB" />
-                  </svg>
-                </div>
-                <div className="flex flex-col items-start">
-                  <div className="text-[#71717A] font-inter text-xs font-normal leading-[1.2]">
-                    <div className="text-[#71717A] font-inter text-xs font-normal leading-[1.2]">
-                      <p>{eventAttendance.name}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+  const toggleAttendance = async () => {
+    if (!currentUserId) return;
+
+    const newAttendingState = !isAttending;
+    setIsAttending(newAttendingState);
+
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("event_person_attendance")
+      .upsert({
+        event_id: eventWithAttendance.event_id,
+        person_id: currentUserId,
+        attending: newAttendingState,
+      });
+
+    if (error) {
+      console.error("Error updating attendance:", error);
+      setIsAttending(!newAttendingState); // Revert state if update fails
+    }
+  };
+
+  return (
+    <div className="relative flex flex-col items-start gap-[16px] rounded-[6px] border border-[#E4E4E7] bg-white shadow-[0px_4px_6px_-1px_rgba(0,0,0,0.10),0px_2px_4px_-2px_rgba(0,0,0,0.10)] cursor-pointer overflow-hidden">
+      <div 
+        className="w-full h-48 bg-[#5D6DEB] overflow-hidden"
+        style={{
+          backgroundImage: thumbnail ? `url(${thumbnail})` : 'none',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      />
+      <div className="flex flex-col items-start gap-[10px] p-4 w-full">
+        <div className="flex flex-col items-start gap-[4px] self-stretch">
+          <div className="text-[#09090B] font-inter text-lg font-semibold leading-[1.2]">
+            {eventWithAttendance.name}
+          </div>
+          <div className="text-[#09090B] font-inter text-sm font-normal leading-[1.4]">
+            {eventTime}
+          </div>
+          <div className="flex items-center gap-1 self-stretch mt-2">
+            <div className="w-4 h-4 rounded-full bg-[#5D6DEB]" />
+            <div className="text-[#71717A] font-inter text-xs font-normal leading-[1.2]">
+              {eventWithAttendance.group?.name}
             </div>
           </div>
         </div>
       </div>
+      {isUpcoming && currentUserId && (
+        <div 
+          className={`absolute bottom-4 right-4 w-6 h-6 rounded-full flex items-center justify-center cursor-pointer transition-colors duration-200 ${isAttending ? 'bg-green-500' : 'bg-white'} border border-gray-300`}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleAttendance();
+          }}
+        >
+          <Check className={`w-4 h-4 transition-colors duration-200 ${isAttending ? 'text-white' : 'text-gray-300'}`} />
+        </div>
+      )}
     </div>
   );
 };

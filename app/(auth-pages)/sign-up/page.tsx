@@ -2,7 +2,6 @@
 
 import { FormMessage, Message } from "@/components/form-message";
 import Link from "next/link";
-import { SmtpMessage } from "../smtp-message";
 
 import { signInWithGoogle } from "../signInWithGoogle";
 
@@ -46,7 +45,6 @@ export default function Signup({ searchParams }: { searchParams: Message; }) {
           </div>
         </button>
       </form>
-      <SmtpMessage />
     </>
   );
 }

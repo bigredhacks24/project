@@ -89,7 +89,7 @@ const CreateCircleModal: React.FC<CreateCircleModalProps> = ({
                 <img
                   src={
                     invitedPeople.find((p) => p.email === email)
-                      ?.profile_picture || "/default-avatar.png"
+                      ?.profile_picture || "https://avatar.iran.liara.run/public"
                   }
                   alt="Profile"
                   width={24}

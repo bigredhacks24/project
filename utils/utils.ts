@@ -14,3 +14,14 @@ export function encodedRedirect(
 ) {
   return redirect(`${path}?${type}=${encodeURIComponent(message)}`);
 }
+
+
+// Add this new function at the top of the file, after the imports
+export const getColorFromString = (str: string) => {
+  const colors = ['#BA8CF1', '#96A7FF', '#FF8FCF', '#51ECDC', '#FFAD97', '#76E1CD'];
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+};

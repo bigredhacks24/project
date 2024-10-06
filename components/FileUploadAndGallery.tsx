@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { EventWithAttendance } from '@/types/general-types';
+import { format } from 'date-fns';
 
 type FileInfo = {
     url: string;
     cid: string;
+    isThumbnail: boolean;
 };
 
 interface FileUploadAndGalleryProps {
@@ -17,6 +18,7 @@ interface FileUploadAndGalleryProps {
 
 export default function FileUploadAndGallery({ event }: FileUploadAndGalleryProps) {
     const [files, setFiles] = useState<FileInfo[]>([]);
+    const [thumbnail, setThumbnail] = useState<FileInfo | null>(null);
     const [isUploading, setIsUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -30,15 +32,17 @@ export default function FileUploadAndGallery({ event }: FileUploadAndGalleryProp
             if (!response.ok) {
                 throw new Error('Failed to fetch files');
             }
-            const data = await response.json();
-            setFiles(data);
+            const data: FileInfo[] = await response.json();
+            const thumbnailFile = data.find(file => file.isThumbnail);
+            setThumbnail(thumbnailFile || null);
+            setFiles(data.filter(file => !file.isThumbnail));
         } catch (err) {
             setError('Failed to fetch files');
             console.error(err);
         }
     };
 
-    const handleFileUpload = async (ev: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileUpload = async (ev: React.ChangeEvent<HTMLInputElement>, isThumbnail: boolean = false) => {
         const file = ev.target.files?.[0];
         if (!file) {
             setError('No file selected');
@@ -52,7 +56,7 @@ export default function FileUploadAndGallery({ event }: FileUploadAndGalleryProp
         formData.append('file', file);
 
         try {
-            const response = await fetch(`/api/files?eventId=${event.event_id}`, {
+            const response = await fetch(`/api/files?eventId=${event.event_id}&thumbnail=${isThumbnail}`, {
                 method: 'POST',
                 body: formData,
             });
@@ -61,8 +65,15 @@ export default function FileUploadAndGallery({ event }: FileUploadAndGalleryProp
                 throw new Error('Upload failed');
             }
 
-            const data = await response.json();
-            setFiles(prevFiles => [...prevFiles, data]);
+            const data: FileInfo = await response.json();
+            if (isThumbnail) {
+                setThumbnail(data);
+            } else {
+                setFiles(prevFiles => [...prevFiles, data]);
+            }
+
+            // Clear the file input
+            ev.target.value = '';
         } catch (err) {
             setError('Failed to upload file');
             console.error(err);
@@ -71,48 +82,94 @@ export default function FileUploadAndGallery({ event }: FileUploadAndGalleryProp
         }
     };
 
-    return (
-        <div className="grid grid-cols-2 gap-x-4">
-            <div>
-                <div className="flex flex-col gap-y-4">
-                    <p className="text-lg font-medium">{event.start_timestamp}</p>
-                </div>
-                <CardContent>
-                    <Input
-                        id="fileInput"
-                        type="file"
-                        onChange={handleFileUpload}
-                        disabled={isUploading}
-                        className="mb-2"
-                    />
-                    <Button
-                        onClick={() => document.getElementById('fileInput')?.click()}
-                        disabled={isUploading}
-                        className="w-full"
-                    >
-                        {isUploading ? 'Uploading...' : 'Upload File'}
-                    </Button>
-                    {error && <p className="text-red-500 mt-2">{error}</p>}
-                </CardContent>
-            </div>
+    const formatDateRange = (startDate: string, endDate: string) => {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const dateStr = format(start, 'MMM do');
+        const startTimeStr = format(start, 'h:mma');
+        const endTimeStr = format(end, 'h:mma');
+        return `${dateStr} ${startTimeStr} - ${endTimeStr}`;
+    };
 
-            <div>
-                <CardHeader>
-                    <CardTitle>File Gallery</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-3 gap-2">
-                        {files.map((file, index) => (
-                            <div key={index} className="aspect-square">
-                                <img
-                                    src={file.url}
-                                    alt={`Uploaded file ${index + 1}`}
-                                    className="w-full h-full object-cover rounded"
-                                />
+    return (
+        <div className="p-4 grid grid-cols-2 w-full">
+            <div className="border-r border-gray-300 pr-5">
+                <div className="mb-6">
+                    <p className="text-gray-400 text-sm font-medium">{formatDateRange(event.start_timestamp, event.end_timestamp)}</p>
+                    <h2 className="text-2xl font-medium my-1 text-black">{event.name}</h2>
+                    <p className="text-gray-400 text-sm">{event.description}</p>
+                </div>
+
+                <div className="mb-6">
+                    <h3 className="text-lg font-semibold mb-2 colored">GUESTS</h3>
+                    <div className="flex flex-col space-y-2">
+                        {event.event_person_attendance.map((attendance, index) => (
+                            <div key={index} className="flex items-center space-x-2">
+                                <div className="w-8 h-8 bg-gray-300 rounded-full">
+                                    <img src={attendance.person.profile_picture || "https://avatar.iran.liara.run/public"} alt={attendance.person.full_name} className="w-full h-full object-cover" />
+                                </div>
+                                <span>{attendance.person.full_name}</span>
                             </div>
                         ))}
                     </div>
-                </CardContent>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4 items-center">
+                    <div className="col-span-2">
+                        <h3 className="text-lg font-semibold colored">EVENT THUMBNAIL</h3>
+                        <p className="text-gray-400 mb-2 text-sm">Add a thumbnail to {event.name}'s page!</p>
+                        <Input
+                            id="thumbnailInput"
+                            type="file"
+                            onChange={(ev) => handleFileUpload(ev, true)}
+                            disabled={isUploading}
+                            className="hidden"
+                        />
+                        <Button
+                            onClick={() => document.getElementById('thumbnailInput')?.click()}
+                            disabled={isUploading}
+                        >
+                            {isUploading ? 'Uploading...' : 'Upload Thumbnail'}
+                        </Button>
+                        {error && <p className="text-red-500 mt-2">{error}</p>}
+                    </div>
+                    <div className="col-span-1">
+                        {thumbnail ? (
+                            <img src={thumbnail.url} alt="Event Thumbnail" className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="aspect-square bg-gray-200"></div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            <div className="pl-5">
+                <div>
+                    <h3 className="text-lg font-semibold mb-2 colored">GALLERY</h3>
+                    <p className="text-gray-600 mb-2">View all of your pictures from the event</p>
+                    <Input
+                        id="galleryInput"
+                        type="file"
+                        onChange={(ev) => handleFileUpload(ev, false)}
+                        disabled={isUploading}
+                        className="hidden"
+                    />
+                    <Button
+                        onClick={() => document.getElementById('galleryInput')?.click()}
+                        disabled={isUploading}
+                        className="mb-4"
+                    >
+                        {isUploading ? 'Uploading...' : 'Upload to Gallery'}
+                    </Button>
+                    <div className="grid grid-cols-4 gap-2">
+                        {files.map((file, index) => (
+                            <img key={index} src={file.url} alt={`Gallery image ${index + 1}`} className="aspect-square object-cover" />
+                        ))}
+                        {[...Array(8 - files.length)].map((_, index) => (
+                            <div key={index + files.length} className="aspect-square bg-gray-200"></div>
+                        ))}
+                    </div>
+                </div>
             </div>
         </div>
     );

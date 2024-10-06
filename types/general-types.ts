@@ -6,13 +6,15 @@ export interface Event {
   creation_timestamp: string; // ISO string for timestamp
   start_timestamp: string;
   end_timestamp: string;
+  description: string;
 }
 
 export interface Group {
   group_id: string;
   name: string;
-  event_count: { count: number } | null;
+  event_count: { count: number; } | null;
 }
+
 
 export interface EventWithAttendance {
   event_id: string;
@@ -21,7 +23,8 @@ export interface EventWithAttendance {
   creation_timestamp: string;
   start_timestamp: string;
   end_timestamp: string;
-  event_person_attendance: { attending: boolean | null; }[];
+  description: string | null;
+  event_person_attendance: { person: Person; attending: boolean; }[];
   group: Omit<Group, "event_count"> | null;
 }
 

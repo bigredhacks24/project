@@ -4,23 +4,13 @@ import { useState, useEffect } from 'react';
 import { createClient } from "@/utils/supabase/client";
 import PersonCard from "@/components/PersonCard";
 import CirclesCard from "@/components/CirclesCard";
-import { Event, Friend, Group } from "@/types/general-types";
+import { Friend, Group } from "@/types/general-types";
 import CreateCircleButton from "@/components/CreateCircleButton";
 import EventCarousel from "@/components/EventCarousel";
 import FileUploadAndGallery from "@/components/FileUploadAndGallery";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Spinner from '@/components/Spinner';
-
-interface EventWithAttendance {
-  event_id: string;
-  group_id: string | null;
-  name: string;
-  creation_timestamp: string;
-  start_timestamp: string;
-  end_timestamp: string;
-  event_person_attendance: { attending: boolean | null; }[];
-  group: Omit<Group, "event_count"> | null;
-}
+import type { EventWithAttendance } from '@/types/general-types';
 
 export default function Home() {
   const [user, setUser] = useState<any>(null);
@@ -47,7 +37,10 @@ export default function Home() {
             .select(`
               *,
               event_person_attendance!inner (
-                attending
+                attending,
+                person (
+                  *
+                )
               ),
               group (
                 *
@@ -57,7 +50,21 @@ export default function Home() {
             .gte('start_timestamp', new Date().toISOString())
             .order('start_timestamp', { ascending: true });
           if (eventsError) throw eventsError;
-          setEvents(eventsData);
+          setEvents(eventsData.map((event) => ({
+            ...event,
+            event_person_attendance: event.event_person_attendance.map((attendance) => ({
+              attending: attendance.attending ?? false,
+              person: {
+                person_id: attendance.person?.person_id || "",
+                email: attendance.person?.email || "",
+                full_name: attendance.person?.full_name || "",
+                friends: attendance.person?.friends || [],
+                phone_number: attendance.person?.phone_number || "",
+                profile_picture: attendance.person?.profile_picture || "",
+                refresh_token: attendance.person?.refresh_token || "",
+              }
+            }))
+          })));
 
           // Fetch groups
           const { data: groupsData, error: groupsError } = await supabase

@@ -66,8 +66,11 @@
     body {
         @apply bg-background text-foreground;
     }
-    h2 {
+    h2, h3.colored {
         @apply text-[#B5B5B5];
+    }
+    h3.colored {
+        @apply text-base;
     }
     label {
       @apply text-[#71717A];

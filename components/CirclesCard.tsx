@@ -21,7 +21,9 @@ export default function CirclesCard({ group, eventCount }: CirclesCardProps) {
     const memberCount = group.members.length;
     if (memberCount === 0) return "No members";
 
-    const displayedMembers = group.members.slice(0, 3).map(member => member.full_name.split(' ')[0]);
+    const displayedMembers = group.members
+      .slice(0, 3)
+      .map((member) => member.full_name.split(" ")[0]);
 
     if (memberCount <= 3) {
       return displayedMembers.join(", ");
@@ -32,6 +34,10 @@ export default function CirclesCard({ group, eventCount }: CirclesCardProps) {
     }
   };
 
+  // Truncate group name if it exceeds 15 characters
+  const truncatedGroupName =
+    group.name.length > 15 ? `${group.name.substring(0, 15)}...` : group.name;
+
   // Get the background color based on the group name
   const bgColor = getColorFromString(group.name);
 
@@ -40,15 +46,15 @@ export default function CirclesCard({ group, eventCount }: CirclesCardProps) {
       className="flex w-[195.667px] p-[17px] flex-col items-center gap-[12px] self-stretch rounded-[6px] border border-[#E4E4E7] opacity-80 bg-white shadow-[0_4px_6px_-1px_rgba(0,0,0,0.10),0_2px_4px_-2px_rgba(0,0,0,0.10)] cursor-pointer hover:shadow-lg transition-shadow duration-300"
       onClick={handleClick}
     >
-      <div 
-        className="w-[122px] h-[122px] rounded-[144px]" 
+      <div
+        className="w-[122px] h-[122px] rounded-[144px]"
         style={{ backgroundColor: bgColor }}
       ></div>
       <div className="flex flex-col items-center gap-0.5">
         <div className="flex h-5 justify-center items-center">
           <div className="flex justify-center items-center gap-2.5">
             <div className="text-[#09090B] font-inter text-sm font-semibold leading-[1.2]">
-              <p>{group.name}</p>
+              <p>{truncatedGroupName}</p>
             </div>
           </div>
         </div>

@@ -110,13 +110,18 @@ export default function Home() {
           ).select(`
               *,
               event_count:event(count),
-              person_group:person(full_name)
+              person_group:person(full_name, person_id)
             `);
           if (groupsError) throw groupsError;
 
           const transformedGroups = groupsData.reduce(
             (acc: any[], group: any) => {
-              if (!acc.some((g) => g.group_id === group.group_id)) {
+              if (
+                !acc.some((g) => g.group_id === group.group_id) &&
+                group.person_group.some(
+                  (person: any) => person.person_id === user.id
+                )
+              ) {
                 acc.push({
                   ...group,
                   event_count: group.event_count[0] || { count: 0 },

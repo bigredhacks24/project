@@ -1,10 +1,15 @@
-import { createClient } from "@/utils/supabase/server";
-import EventCard from "@/components/EventCard";
+'use client';
+
+import { useState, useEffect } from 'react';
+import { createClient } from "@/utils/supabase/client";
 import PersonCard from "@/components/PersonCard";
 import CirclesCard from "@/components/CirclesCard";
-import { EventAttendance, Friend, Group } from "@/types/general-types";
+import { Event, Friend, Group } from "@/types/general-types";
 import CreateCircleButton from "@/components/CreateCircleButton";
 import EventCarousel from "@/components/EventCarousel";
+import FileUploadAndGallery from "@/components/FileUploadAndGallery";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import Spinner from '@/components/Spinner';
 
 interface EventWithAttendance {
   event_id: string;
@@ -13,52 +18,96 @@ interface EventWithAttendance {
   creation_timestamp: string;
   start_timestamp: string;
   end_timestamp: string;
-  event_person_attendance: { attending: boolean | null }[];
+  event_person_attendance: { attending: boolean | null; }[];
+  group: Omit<Group, "event_count"> | null;
 }
 
-export default async function Home() {
-  const supabase = createClient();
+export default function Home() {
+  const [user, setUser] = useState<any>(null);
+  const [events, setEvents] = useState<EventWithAttendance[]>([]);
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [selectedEventWithAttendance, setselectedEventWithAttendance] = useState<EventWithAttendance | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+  useEffect(() => {
+    const fetchData = async () => {
+      const supabase = createClient();
 
-  if (!user) {
-    console.error("User is not logged in.");
-    return <div>Please log in to view this page.</div>;
+      try {
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError) throw userError;
+        setUser(user);
+
+        if (user) {
+          // Fetch events
+          const { data: eventsData, error: eventsError } = await supabase
+            .from("event")
+            .select(`
+              *,
+              event_person_attendance!inner (
+                attending
+              ),
+              group (
+                *
+              )
+            `)
+            .eq("event_person_attendance.person_id", user.id)
+            .gte('start_timestamp', new Date().toISOString())
+            .order('start_timestamp', { ascending: true });
+          if (eventsError) throw eventsError;
+          setEvents(eventsData);
+
+          // Fetch groups
+          const { data: groupsData, error: groupsError } = await supabase
+            .from("group")
+            .select(`
+              *,
+              event_count:event(count)
+            `);
+          if (groupsError) throw groupsError;
+
+          const transformedGroups = groupsData.map((group: any) => ({
+            ...group,
+            event_count: group.event_count[0] || { count: 0 }
+          }));
+
+          setGroups(transformedGroups);
+
+          // Fetch friends
+          const { data: friendsData, error: friendsError } = await supabase
+            .from("person")
+            .select("*")
+            .neq("person_id", user.id);
+          if (friendsError) throw friendsError;
+          setFriends(friendsData);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setError("Error loading data. Please try again later.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleEventClick = (event: EventWithAttendance) => {
+    setselectedEventWithAttendance(event);
+  };
+
+  if (isLoading) {
+    return <Spinner />;
   }
 
-  // Fetch events
-  const { data: events, error: eventsError } = await supabase
-    .from("event")
-    .select(
-      `
-      *,
-      event_person_attendance (
-        attending
-      )
-    `
-    )
-    .eq("event_person_attendance.person_id", user.id);
+  if (error) {
+    return <div>{error}</div>;
+  }
 
-  // Fetch friends
-  const { data: friends, error: friendsError } = await supabase
-    .from("person")
-    .select("*")
-    .neq("person_id", user.id);
-
-  // Fetch groups
-  const { data: groups, error: groupsError } = await supabase
-    .from("group")
-    .select("*");
-
-  if (eventsError || friendsError || groupsError) {
-    console.error(
-      "Error fetching data:",
-      eventsError || friendsError || groupsError
-    );
-    return <div>Error loading data. Please try again later.</div>;
+  if (!user) {
+    return <div>Please log in to view this page.</div>;
   }
 
   return (
@@ -70,10 +119,10 @@ export default async function Home() {
               Upcoming Events
             </div>
           </div>
-          <EventCarousel events={events} />
+          <EventCarousel events={events} onEventClick={handleEventClick} />
         </div>
       </div>
-      <div className="flex w-[1222px] items-start gap-9">
+      <div className="w-[1222px] items-start gap-9 grid grid-cols-2">
         <div className="flex h-[291px] flex-col items-start gap-6 flex-[1_0_0]">
           <div className="flex items-start gap-6">
             <div className="text-black font-roboto text-[36px] font-medium leading-[20.25px] tracking-[0.338px]">
@@ -81,13 +130,13 @@ export default async function Home() {
             </div>
             <CreateCircleButton />
           </div>
-          <div className="flex flex-wrap gap-4 w-full">
+          <div className="flex overflow-x-scroll gap-x-4 w-full">
             {groups &&
               groups.map((group: Group) => (
-                <div key={group.group_id} className="w-[calc(33.333%-16px)]">
+                <div key={group.group_id}>
                   <CirclesCard
                     group={group}
-                    eventCount={0}
+                    eventCount={group.event_count?.count || 0}
                   />
                 </div>
               ))}
@@ -97,7 +146,7 @@ export default async function Home() {
           <div className="text-black font-roboto text-[36px] font-medium leading-[20.25px] tracking-[0.338px]">
             Your Friends
           </div>
-          <div className="flex flex-col items-start gap-[8px] self-stretch">
+          <div className="flex flex-col items-center gap-[8px] self-stretch justify-center overflow-y-auto">
             {friends &&
               friends.map((friend: Friend) => (
                 <PersonCard key={friend.person_id} friend={friend} />
@@ -105,6 +154,15 @@ export default async function Home() {
           </div>
         </div>
       </div>
+
+      <Dialog open={!!selectedEventWithAttendance} onOpenChange={() => setselectedEventWithAttendance(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Event Files</DialogTitle>
+          </DialogHeader>
+          {selectedEventWithAttendance && <FileUploadAndGallery event={selectedEventWithAttendance} />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

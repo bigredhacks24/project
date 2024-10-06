@@ -11,12 +11,18 @@ export interface Event {
 export interface Group {
   group_id: string;
   name: string;
+  event_count: { count: number } | null;
 }
 
-export interface EventAttendance {
-  event: Event;
-  group: Group;
-  attending: boolean;
+export interface EventWithAttendance {
+  event_id: string;
+  group_id: string | null;
+  name: string;
+  creation_timestamp: string;
+  start_timestamp: string;
+  end_timestamp: string;
+  event_person_attendance: { attending: boolean | null; }[];
+  group: Omit<Group, "event_count"> | null;
 }
 
 // Group Types

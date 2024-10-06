@@ -1,20 +1,9 @@
 import React from "react";
-import type { EventAttendance } from "@/types/general-types";
+import type { EventWithAttendance } from "@/types/general-types";
 // import type { Database } from "@/types/database.types";
 
-// type EventAttendance = Database["public"]["Tables"]["event"]["Row"];
-
-interface EventWithAttendance {
-  event_id: string;
-  group_id: string | null;
-  name: string;
-  creation_timestamp: string;
-  start_timestamp: string;
-  end_timestamp: string;
-  event_person_attendance: { attending: boolean | null }[];
-}
 interface EventCardProps {
-  eventAttendance: EventWithAttendance;
+  eventWithAttendance: EventWithAttendance;
 }
 
 // Function to format the timestamp into a readable time string
@@ -45,14 +34,14 @@ const formatEventTime = (start: string, end: string) => {
   return `${formattedStartDate}, ${formattedStartTime} - ${formattedEndTime}`;
 };
 
-const EventCard: React.FC<EventCardProps> = ({ eventAttendance }) => {
+const EventCard: React.FC<EventCardProps> = ({ eventWithAttendance }) => {
   const eventTime = formatEventTime(
-    eventAttendance.start_timestamp,
-    eventAttendance.end_timestamp
+    eventWithAttendance.start_timestamp,
+    eventWithAttendance.end_timestamp
   );
 
   return (
-    <div className="flex p-[18px] flex-col items-start gap-[16px] flex-[1_0_0] self-stretch rounded-[6px] border border-[#E4E4E7] bg-white shadow-[0px_4px_6px_-1px_rgba(0,0,0,0.10),0px_2px_4px_-2px_rgba(0,0,0,0.10)]">
+    <div className="flex p-[18px] flex-col items-start gap-[16px] flex-[1_0_0] self-stretch rounded-[6px] border border-[#E4E4E7] bg-white shadow-[0px_4px_6px_-1px_rgba(0,0,0,0.10),0px_2px_4px_-2px_rgba(0,0,0,0.10)] cursor-pointer">
       <div className="flex items-start gap-[16px] flex-[1_0_0] self-stretch">
         <div className="flex flex-col justify-center items-start gap-[16px] flex-[1_0_0] self-stretch">
           <div className="flex p-[12px_11.8px_152px_63px] justify-end items-center flex-[1_0_0] self-stretch rounded-[6px] bg-[#5D6DEB]">
@@ -63,7 +52,7 @@ const EventCard: React.FC<EventCardProps> = ({ eventAttendance }) => {
                 <div className="flex h-5 items-start">
                   <div className="flex justify-center items-center gap-2.5">
                     <div className="text-[#09090B] font-inter text-sm font-semibold leading-[1.2]">
-                      <p>{eventAttendance.name}</p>
+                      <p>{eventWithAttendance.name}</p>
                     </div>
                   </div>
                 </div>
@@ -89,7 +78,7 @@ const EventCard: React.FC<EventCardProps> = ({ eventAttendance }) => {
                 <div className="flex flex-col items-start">
                   <div className="text-[#71717A] font-inter text-xs font-normal leading-[1.2]">
                     <div className="text-[#71717A] font-inter text-xs font-normal leading-[1.2]">
-                      <p>{eventAttendance.name}</p>
+                      <p>{eventWithAttendance.name}</p>
                     </div>
                   </div>
                 </div>

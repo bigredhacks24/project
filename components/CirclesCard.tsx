@@ -9,11 +9,11 @@ interface CirclesCardProps {
   eventCount: number;
 }
 
-const CirclesCard: React.FC<CirclesCardProps> = ({ group, eventCount }) => {
+export default function CirclesCard({ group, eventCount }: CirclesCardProps) {
   const router = useRouter();
 
   const handleClick = () => {
-    router.push(`/groups/${group.group_id}`);
+    router.push(`/circles/${group.group_id}`);
   };
 
   return (
@@ -49,6 +49,4 @@ const CirclesCard: React.FC<CirclesCardProps> = ({ group, eventCount }) => {
       </div>
     </div>
   );
-};
-
-export default CirclesCard;
+}

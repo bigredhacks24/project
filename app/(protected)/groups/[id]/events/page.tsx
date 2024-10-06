@@ -31,7 +31,7 @@ export default async function GroupEventsPage({
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-4">Events for {group.name}</h1>
       <Link
-        href={`/groups/${params.id}`}
+        href={`/circles/${params.id}`}
         className="text-blue-500 hover:underline mb-4 inline-block"
       >
         Back to Group

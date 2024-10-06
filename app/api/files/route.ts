@@ -1,14 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { pinata } from "@/utils/config";
 
-// export const config = {
-//     api: {
-//         bodyParser: false,
-//     },
-// };
-
-async function getOrCreateUserGroup(userId: string) {
-    const groupName = `user_${userId}_group`;
+async function getOrCreateEventGroup(eventId: string) {
+    const groupName = `event_${eventId}_group`;
     let group;
 
     // Try to find an existing group
@@ -28,12 +22,12 @@ async function getOrCreateUserGroup(userId: string) {
 
 export async function POST(request: NextRequest) {
     try {
-        const userId = request.nextUrl.searchParams.get('userId');
-        if (!userId) {
-            return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+        const eventId = request.nextUrl.searchParams.get('eventId');
+        if (!eventId) {
+            return NextResponse.json({ error: "Event ID is required" }, { status: 400 });
         }
 
-        const groupId = await getOrCreateUserGroup(userId);
+        const groupId = await getOrCreateEventGroup(eventId);
 
         const data = await request.formData();
         const file: File | null = data.get("file") as unknown as File;
@@ -59,16 +53,14 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
     try {
-        const userId = request.nextUrl.searchParams.get('userId');
-        if (!userId) {
-            return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+        const eventId = request.nextUrl.searchParams.get('eventId');
+        if (!eventId) {
+            return NextResponse.json({ error: "Event ID is required" }, { status: 400 });
         }
 
-        const groupId = await getOrCreateUserGroup(userId);
+        const groupId = await getOrCreateEventGroup(eventId);
 
-        const {
-            files
-        } = await pinata.files.list().group(groupId);
+        const { files } = await pinata.files.list().group(groupId);
 
         const fileUrls = await Promise.all(files.map(async (file) => {
             const url = await pinata.gateways.createSignedURL({

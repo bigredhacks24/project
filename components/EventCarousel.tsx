@@ -2,22 +2,14 @@
 
 import React, { useState } from 'react';
 import EventCard from "@/components/EventCard";
-
-interface EventWithAttendance {
-  event_id: string;
-  group_id: string | null;
-  name: string;
-  creation_timestamp: string;
-  start_timestamp: string;
-  end_timestamp: string;
-  event_person_attendance: { attending: boolean | null }[];
-}
+import { EventWithAttendance } from "@/types/general-types";
 
 interface EventCarouselProps {
   events: EventWithAttendance[];
+  onEventClick: (event: EventWithAttendance) => void;
 }
 
-const EventCarousel: React.FC<EventCarouselProps> = ({ events }) => {
+const EventCarousel: React.FC<EventCarouselProps> = ({ events, onEventClick }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const eventsPerPage = 5;
 
@@ -34,7 +26,9 @@ const EventCarousel: React.FC<EventCarouselProps> = ({ events }) => {
     <div className="relative flex items-start gap-3 self-stretch">
       <div className="flex h-[313px] items-start gap-3 self-stretch overflow-hidden">
         {currentEvents.map((event: EventWithAttendance) => (
-          <EventCard key={event.event_id} eventAttendance={event} />
+          <div key={event.event_id} onClick={() => onEventClick(event)}>
+            <EventCard eventWithAttendance={event} />
+          </div>
         ))}
       </div>
       {events.length > eventsPerPage && (

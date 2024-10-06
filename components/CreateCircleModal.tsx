@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-
-interface Person {
-  person_id: string;
-  full_name: string;
-  email: string;
-  profile_photo?: string;
-}
+import { Person } from "@/types/general-types";
 
 interface CreateCircleModalProps {
   isOpen: boolean;
@@ -83,7 +77,7 @@ const CreateCircleModal: React.FC<CreateCircleModalProps> = ({
             {invitedPeople.find(p => p.email === email) && (
               <div className="flex items-center mt-1">
                 <Image
-                  src={invitedPeople.find(p => p.email === email)?.profile_photo || "/default-avatar.png"}
+                  src={invitedPeople.find(p => p.email === email)?.profile_picture || "/default-avatar.png"}
                   alt="Profile"
                   width={24}
                   height={24}

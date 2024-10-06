@@ -21,10 +21,12 @@ export default function FileUploadAndGallery({ event }: FileUploadAndGalleryProp
     const [thumbnail, setThumbnail] = useState<FileInfo | null>(null);
     const [isUploading, setIsUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [key, setKey] = useState(0); // Add this line
 
+    // TODO: still not re-rendering :(
     useEffect(() => {
         fetchFiles(event.event_id);
-    }, [event]);
+    }, [event, key]); // Add key to the dependency array
 
     const fetchFiles = async (eventId: string) => {
         try {
@@ -65,12 +67,8 @@ export default function FileUploadAndGallery({ event }: FileUploadAndGalleryProp
                 throw new Error('Upload failed');
             }
 
-            const data: FileInfo = await response.json();
-            if (isThumbnail) {
-                setThumbnail(data);
-            } else {
-                setFiles(prevFiles => [...prevFiles, data]);
-            }
+            // Instead, trigger a re-fetch
+            setKey(prevKey => prevKey + 1);
 
             // Clear the file input
             ev.target.value = '';

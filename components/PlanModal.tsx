@@ -53,7 +53,6 @@ export default function PlanModal({
     setEndTime(eventData.endTime);
   }, [eventData]);
 
-  // Mock data for common availability
   const [commonAvailability, setCommonAvailability] = useState<
     { start: Date; end: Date }[]
   >([
@@ -63,6 +62,35 @@ export default function PlanModal({
     { start: new Date(2024, 9, 12, 13, 0), end: new Date(2024, 9, 12, 15, 0) },
     { start: new Date(2024, 9, 14, 15, 0), end: new Date(2024, 9, 14, 18, 0) },
   ]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const newEvent = {
+      groupId: eventData.inviteCircle,
+      name: eventData.name,
+      start_timestamp: `${date}T${startTime}:00`,
+      end_timestamp: `${date}T${endTime}:00`,
+      description,
+      allowPlusOne: guestsPlusOne,
+    };
+
+    const response = await fetch("/api/events", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(newEvent),
+    });
+
+    if (response.ok) {
+      // Handle success (e.g., close modal, show success message)
+      onClose();
+    } else {
+      // Handle error (e.g., show error message)
+      console.error("Failed to create event");
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -78,12 +106,16 @@ export default function PlanModal({
                 Choose based on your availabilities and recommendations.
               </p>
             </DialogHeader>
-            <form className="mt-4 space-y-4">
+            <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Date
                 </label>
-                <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+                <Input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">

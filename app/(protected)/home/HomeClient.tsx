@@ -88,10 +88,7 @@ export default function HomeClient({
 
   const handleBack = () => {
     setIsPlanModalOpen(false);
-    // Use setTimeout to ensure the PlanModal is closed before opening the EventModal
-    setTimeout(() => {
-      setIsEventModalOpen(true);
-    }, 0);
+    setIsEventModalOpen(true);
   };
 
   return (

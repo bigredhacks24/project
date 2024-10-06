@@ -24,6 +24,8 @@
     "geist": "^1.2.1",
     "googleapis": "^144.0.0",
     "lucide-react": "^0.436.0",
+    "mailcomposer": "^4.0.2",
+    "mailgun-js": "^0.22.0",
     "mailgun.js": "^10.2.3",
     "next": "latest",
     "next-themes": "^0.3.0",

@@ -6,6 +6,7 @@ import FileUploadForm from "@/components/file-upload-form";
 import { useState, useEffect } from "react";
 import { createClient } from '@/utils/supabase/client';
 import type { User } from '@supabase/supabase-js';
+import Spinner from "@/components/Spinner";
 
 interface UploadedFile {
   url: string;
@@ -49,7 +50,7 @@ export default function PlaygroundPage() {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <Spinner />;
   }
 
   if (error || !user) {

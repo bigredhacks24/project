@@ -56,11 +56,6 @@ const EventCard: React.FC<EventCardProps> = ({ eventAttendance }) => {
       <div className="flex items-start gap-[16px] flex-[1_0_0] self-stretch">
         <div className="flex flex-col justify-center items-start gap-[16px] flex-[1_0_0] self-stretch">
           <div className="flex p-[12px_11.8px_152px_63px] justify-end items-center flex-[1_0_0] self-stretch rounded-[6px] bg-[#5D6DEB]">
-            {/* <div className="flex p-[4px_8px] justify-center items-center gap-[10px] rounded-[27px] bg-[#98A3F6]">
-              <span className="text-white font-Inter text-[14px] font-semibold leading-[120%]">
-                
-              </span>
-            </div> */}
           </div>
           <div className="flex flex-col items-start gap-[10px] self-stretch">
             <div className="flex flex-col items-start gap-[4px] self-stretch">

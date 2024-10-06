@@ -3,21 +3,31 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
-// Fetch all groups user is part of
+// Fetch all groups user is part of or a specific group
 export async function GET(req: Request) {
   const supabase = createClient();
   const url = new URL(req.url);
   const userId = url.searchParams.get("userId");
+  const groupId = url.searchParams.get("groupId");
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("group_person")
     .select(
       `
       group:group_id(*), 
       person:person_id(full_name, email)
     `
-    )
-    .eq("person_id", userId || "");
+    );
+
+  if (groupId) {
+    query = query.eq("group_id", groupId);
+  } else if (userId) {
+    query = query.eq("person_id", userId);
+  } else {
+    return NextResponse.json({ error: "Missing userId or groupId" }, { status: 400 });
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

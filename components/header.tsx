@@ -1,80 +1,49 @@
 import { signOutAction } from "@/app/actions";
-import { hasEnvVars } from "@/utils/supabase/check-env-vars";
 import Link from "next/link";
-import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { createClient } from "@/utils/supabase/server";
 
-export default async function AuthButton() {
+export default async function Header() {
   const {
     data: { user },
   } = await createClient().auth.getUser();
 
-  if (!hasEnvVars) {
-    return (
-      <>
-        <div className="flex gap-4 items-center">
-          <div>
-            <Badge
-              variant={"default"}
-              className="font-normal pointer-events-none"
-            >
-              Please update .env.local file with anon key and url
-            </Badge>
+  return (
+    <header className="w-full bg-white shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center">
+            <div className="w-6 h-6 bg-gray-300 rounded-full mr-2"></div>
+            <Link href="/" className="text-xl font-semibold text-gray-600">
+              Big Red Hacks
+            </Link>
           </div>
-          <div className="flex gap-2">
-            <Button
-              asChild
-              size="sm"
-              variant={"outline"}
-              disabled
-              className="opacity-75 cursor-none pointer-events-none"
-            >
-              <Link href="/sign-in">Sign in</Link>
-            </Button>
-            <Button
-              asChild
-              size="sm"
-              variant={"default"}
-              disabled
-              className="opacity-75 cursor-none pointer-events-none"
-            >
-              <Link href="/sign-up">Sign up</Link>
-            </Button>
-          </div>
+          {user ? (
+            <nav className="flex items-center gap-6">
+              <Link href="/memories" className="text-gray-600 hover:text-gray-900">
+                Memories
+              </Link>
+              <Link href="/profile" className="text-gray-600 hover:text-gray-900">
+                Profile
+              </Link>
+              <form action={signOutAction}>
+                <Button type="submit" variant="default">
+                  Sign Out
+                </Button>
+              </form>
+            </nav>
+          ) : (
+            <div className="flex gap-2">
+              <Button asChild size="sm" variant="outline">
+                <Link href="/sign-in">Sign in</Link>
+              </Button>
+              <Button asChild size="sm" variant="default">
+                <Link href="/sign-up">Sign up</Link>
+              </Button>
+            </div>
+          )}
         </div>
-      </>
-    );
-  }
-
-  return user ? (
-    <div className="flex items-center gap-4">
-      {/* add playground link */}
-      <Link href="/playground" className="flex items-center">
-        <span>Playground</span>
-      </Link>
-      <Link href={`/profile/${user.id}`} className="flex items-center">
-        <img
-          src={user.user_metadata?.avatar_url || "https://picsum.photos/200/300"} // Use user's profile photo or a placeholder
-          alt="Profile Photo"
-          className="rounded-full w-10 h-10"
-        />
-      </Link>
-      <span>Hey, {user.email}!</span>
-      <form action={signOutAction}>
-        <Button type="submit" variant={"outline"}>
-          Sign out
-        </Button>
-      </form>
-    </div>
-  ) : (
-    <div className="flex gap-2">
-      <Button asChild size="sm" variant={"outline"}>
-        <Link href="/sign-in">Sign in</Link>
-      </Button>
-      <Button asChild size="sm" variant={"default"}>
-        <Link href="/sign-up">Sign up</Link>
-      </Button>
-    </div>
+      </div>
+    </header>
   );
 }

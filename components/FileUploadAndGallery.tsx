@@ -104,7 +104,7 @@ export default function FileUploadAndGallery({ event }: FileUploadAndGalleryProp
                         {event.event_person_attendance.map((attendance, index) => (
                             <div key={index} className="flex items-center space-x-2">
                                 <div className="w-8 h-8 bg-gray-300 rounded-full">
-                                    <img src={attendance.person.profile_picture || "https://avatar.iran.liara.run/public"} alt={attendance.person.full_name} className="w-full h-full object-cover" />
+                                    <img src={attendance.person.profile_picture || "https://avatar.iran.liara.run/public"} alt={attendance.person.full_name} className="w-full h-full object-cover rounded-full" />
                                 </div>
                                 <span>{attendance.person.full_name}</span>
                             </div>

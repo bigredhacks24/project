@@ -1,6 +1,5 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import type { EventWithAttendance } from "@/types/general-types";
-// import type { Database } from "@/types/database.types";
 
 interface EventCardProps {
   eventWithAttendance: EventWithAttendance;
@@ -35,6 +34,30 @@ const formatEventTime = (start: string, end: string) => {
 };
 
 const EventCard: React.FC<EventCardProps> = ({ eventWithAttendance }) => {
+  const [thumbnail, setThumbnail] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchThumbnail = async () => {
+      try {
+        const response = await fetch(`/api/files?eventId=${eventWithAttendance.event_id}`);
+        if (response.ok) {
+          const files = await response.json();
+          const thumbnailFile = files.find((file: any) => file.isThumbnail);
+          if (thumbnailFile) {
+            setThumbnail(thumbnailFile.url);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching thumbnail:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchThumbnail();
+  }, [eventWithAttendance.event_id]);
+
   const eventTime = formatEventTime(
     eventWithAttendance.start_timestamp,
     eventWithAttendance.end_timestamp
@@ -44,7 +67,14 @@ const EventCard: React.FC<EventCardProps> = ({ eventWithAttendance }) => {
     <div className="flex p-[18px] flex-col items-start gap-[16px] flex-[1_0_0] self-stretch rounded-[6px] border border-[#E4E4E7] bg-white shadow-[0px_4px_6px_-1px_rgba(0,0,0,0.10),0px_2px_4px_-2px_rgba(0,0,0,0.10)] cursor-pointer">
       <div className="flex items-start gap-[16px] flex-[1_0_0] self-stretch">
         <div className="flex flex-col justify-center items-start gap-[16px] flex-[1_0_0] self-stretch">
-          <div className="flex p-[12px_11.8px_152px_63px] justify-end items-center flex-[1_0_0] self-stretch rounded-[6px] bg-[#5D6DEB]">
+          <div 
+            className="flex p-[12px_11.8px_152px_63px] justify-end items-center flex-[1_0_0] self-stretch rounded-[6px] bg-[#5D6DEB] overflow-hidden"
+            style={{
+              backgroundImage: thumbnail ? `url(${thumbnail})` : 'none',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          >
           </div>
           <div className="flex flex-col items-start gap-[10px] self-stretch">
             <div className="flex flex-col items-start gap-[4px] self-stretch">

@@ -153,7 +153,7 @@ export default function Home() {
           <div className="text-black font-roboto text-[36px] font-medium leading-[20.25px] tracking-[0.338px]">
             Your Friends
           </div>
-          <div className="flex flex-col items-center gap-[8px] self-stretch justify-center overflow-y-scroll h-[400px]">
+          <div className="flex flex-col items-center gap-[8px] self-stretch justify-center overflow-y-scroll h-[400px] pt-20">
             {friends &&
               friends.map((friend: Friend) => (
                 <PersonCard key={friend.person_id} friend={friend} />

@@ -143,8 +143,8 @@ export default function FileUploadAndGallery({ event }: FileUploadAndGalleryProp
 
             <div className="pl-5">
                 <div>
-                    <h3 className="text-lg font-semibold mb-2 colored">GALLERY</h3>
-                    <p className="text-gray-600 mb-2">View all of your pictures from the event</p>
+                    <h3 className="text-lg font-semibold mb-2 colored">Upload Media</h3>
+                    <p className="text-gray-400 mb-2 -mt-1">Add pics from <span className="font-semibold">{event.name}</span>!</p>
                     <Input
                         id="galleryInput"
                         type="file"
@@ -152,6 +152,7 @@ export default function FileUploadAndGallery({ event }: FileUploadAndGalleryProp
                         disabled={isUploading}
                         className="hidden"
                     />
+                    <h3 className="text-lg font-semibold mb-2 colored">GALLERY</h3>
                     <Button
                         onClick={() => document.getElementById('galleryInput')?.click()}
                         disabled={isUploading}

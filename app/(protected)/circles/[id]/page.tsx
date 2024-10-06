@@ -2,13 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import type { Database } from "@/types/database.types";
 import { Badge } from "@/components/ui/badge";
 import EventCard from "@/components/EventCard";
 import Spinner from "@/components/Spinner";
 import WeeklyCalendar from "@/components/WeeklyCalendar";
-
+import { Button } from "@/components/ui/button";
+import { ChevronRight } from "lucide-react";
+import { sendEmail } from "@/utils/email";
+// import mailgun from 'mailgun-js';
+// import mailcomposer from "mailcomposer";
 type CircleData = Database["public"]["Tables"]["group"]["Row"] & {
   members: Database["public"]["Tables"]["person"]["Row"][];
 };
@@ -21,8 +24,19 @@ type CirclePageData = {
   pastEvents: Event[];
 };
 
+type Recommendation = {
+  text: string;
+  times: string[];
+};
+
+interface AvailabilityBlock {
+  start: Date;
+  end: Date;
+}
 export default function CirclePage() {
   const { id } = useParams();
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [emailButtonClicked, setEmailButtonClicked] = useState(false);
   const [circle, setCircle] = useState<CircleData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [pageData, setPageData] = useState<CirclePageData>({
@@ -65,7 +79,9 @@ export default function CirclePage() {
 
           if (circleData.members && circleData.members.length > 0) {
             // Fetch common free periods
-            const commonFreePeriods = await fetchFreePeriods(circleData.members);
+            const commonFreePeriods = await fetchFreePeriods(
+              circleData.members
+            );
             console.log("Common free periods:", commonFreePeriods);
 
             setCommonAvailability(commonFreePeriods);
@@ -105,7 +121,80 @@ export default function CirclePage() {
 
     fetchCircleData();
   }, [id]);
+  useEffect(() => {
+    if (commonAvailability) {
+      const newRecommendations: Recommendation[] = [];
 
+      Object.entries(commonAvailability).forEach(([day, blocks]) => {
+        blocks.forEach((block) => {
+          const startTime = new Date(block.start);
+          const endTime = new Date(block.end);
+          const startHour = startTime.getHours();
+          const endHour = endTime.getHours();
+          const isWeekend = ["Saturday", "Sunday"].includes(day);
+
+          let recommendation = "";
+
+          if (
+            startHour >= 17 &&
+            startHour <= 19 &&
+            endHour >= 17.5 &&
+            endHour <= 20
+          ) {
+            recommendation = "🍽️ Grab dinner?";
+          } else if (
+            startHour >= 11 &&
+            startHour <= 12.5 &&
+            endHour >= 11.5 &&
+            endHour <= 13.5
+          ) {
+            recommendation = "Grab lunch?";
+          } else if (
+            startHour >= 19 &&
+            startHour <= 22.5 &&
+            endHour >= 21.5 &&
+            endHour <= 23.98
+          ) {
+            recommendation =
+              Math.random() < 0.5 ? "Watch a movie?" : "Game night?";
+          } else if (
+            isWeekend &&
+            ((startHour >= 6 && startHour <= 11) ||
+              (startHour >= 12 && startHour <= 17))
+          ) {
+            const weekendActivities = [
+              "Play pickleball!",
+              "Tennis era?",
+              "Cafe crawl?",
+              "Lynah rink skating?",
+              "Picnic on the slope",
+            ];
+            recommendation =
+              weekendActivities[
+                Math.floor(Math.random() * weekendActivities.length)
+              ];
+          }
+
+          if (recommendation) {
+            const timeString = `${day} ${startTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} - ${endTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+            const existingRecommendation = newRecommendations.find(
+              (r) => r.text === recommendation
+            );
+            if (existingRecommendation) {
+              existingRecommendation.times.push(timeString);
+            } else {
+              newRecommendations.push({
+                text: recommendation,
+                times: [timeString],
+              });
+            }
+          }
+        });
+      });
+
+      setRecommendations(newRecommendations);
+    }
+  }, [commonAvailability]);
   const fetchFreePeriods = async (members: any[]) => {
     const allFreePeriods: { [key: string]: { start: Date; end: Date }[] }[] =
       await Promise.all(
@@ -150,8 +239,6 @@ export default function CirclePage() {
       );
       intersectedFreePeriods[day] = intersectTimeBlocks(dayFreePeriods);
     });
-
-    console.log('Intersected free periods:', JSON.stringify(intersectedFreePeriods, null, 2));
 
     return intersectedFreePeriods;
   };
@@ -270,6 +357,61 @@ export default function CirclePage() {
     }
   };
 
+  const handleEmailButtonClicked = async () => {
+    if (circle && circle.members) {
+      const userEmails = circle.members.map((member) => member.email);
+
+      // Generate summary of recommendations
+      const recommendationsSummary =
+        generateRecommendationsSummary(recommendations);
+
+      const emailContent = `
+      Hey ${circle.name}!
+  Here are your common times and recommended hangout activities for the next week:\n
+  
+  ${recommendationsSummary}
+  
+View more at <a href="https://findcircles.co/group/${circle.group_id}">Circles</a> ✨
+      `;
+
+      await sendEmail(
+        // userEmails.join(", "),
+        "jasminexinzeli@gmail.com",
+        `🟡 Hangout times with ${circle.name} this week!`,
+        emailContent
+      );
+      setEmailButtonClicked(true);
+    }
+  };
+
+  const generateNextWeekSummary = (availability: {
+    [key: string]: { start: Date; end: Date }[];
+  }) => {
+    const today = new Date();
+    const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+    let summary = "";
+
+    Object.entries(availability).forEach(([day, blocks]) => {
+      summary += `${day}:\n`;
+      blocks.forEach((block) => {
+        const startTime = new Date(block.start);
+        const endTime = new Date(block.end);
+        if (startTime >= today && startTime <= nextWeek) {
+          summary += `  ${startTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} - ${endTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}\n`;
+        }
+      });
+      summary += "\n";
+    });
+
+    return summary;
+  };
+
+  const generateRecommendationsSummary = (recs: Recommendation[]) => {
+    return recs
+      .map((rec) => `<strong>${rec.text}</strong>: ${rec.times.join(", ")}`)
+      .join("\n\n");
+  };
+
   if (isLoading) {
     return <Spinner />;
   }
@@ -335,22 +477,33 @@ export default function CirclePage() {
                 <h2 className="text-base font-semibold mb-2 uppercase">
                   Suggested Events
                 </h2>
-                {pageData.suggestedEvents.map((event) => (
-                  <div
-                    key={event.event_id}
-                    className="flex items-center justify-between space-y-1"
-                  >
-                    <div className="flex items-center">
-                      <Badge className="bg-[#CACBCC] text-white mr-2">
-                        <span className="text-xs">{`${formatDate(event.start_timestamp)} - ${formatDate(event.end_timestamp).split(" ")[1]}`}</span>
-                      </Badge>
-                      <span className="font-medium text-base">
-                        {event.name}
+                {recommendations.map((recommendation, index) => (
+                  <div key={index} className="mb-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <span className="text-black font-medium text-lg">
+                        {recommendation.text}
                       </span>
+                      <div className="flex flex-col items-end">
+                        {recommendation.times.map((time, timeIndex) => (
+                          <div
+                            key={timeIndex}
+                            className="flex items-center mb-2"
+                          >
+                            <span className="text-sm text-[#9C9C9C] mr-2">
+                              {time}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="rounded-full px-3 py-1 text-xs font-medium"
+                            >
+                              <span className="mr-1">Schedule</span>
+                              <ChevronRight className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <Button variant="default" size="sm">
-                      Send Invite
-                    </Button>
                   </div>
                 ))}
               </div>
@@ -463,6 +616,12 @@ export default function CirclePage() {
               </p>
               <Button variant="link" className="p-0 h-auto text-[#B5B5B5]">
                 Edit
+              </Button>
+              <Button
+                onClick={handleEmailButtonClicked}
+                disabled={emailButtonClicked}
+              >
+                {emailButtonClicked ? "Email Sent" : "Send Email Now"}
               </Button>
             </div>
 

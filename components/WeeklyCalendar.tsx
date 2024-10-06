@@ -7,7 +7,7 @@ interface AvailabilityBlock {
 
 interface WeeklyCalendarProps {
   startDate: Date;
-  commonAvailability: { [key: string]: AvailabilityBlock[] }; // Expecting an object with days as keys
+  commonAvailability: { [key: string]: AvailabilityBlock[]; }; // Expecting an object with days as keys
 }
 
 const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ startDate, commonAvailability }) => {
@@ -63,11 +63,11 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ startDate, commonAvaila
     for (let i = 0; i < 7; i++) {
       const currentDate = new Date(startDate);
       currentDate.setDate(startDate.getDate() + i);
-      
+
       // Day of week
       ctx.font = '12px Arial';
       ctx.fillText(days[currentDate.getDay()], leftPadding + i * dayWidth + dayWidth / 2, 20);
-      
+
       // Date number
       ctx.font = 'bold 20px Arial';
       ctx.fillText(currentDate.getDate().toString(), leftPadding + i * dayWidth + dayWidth / 2, 45);

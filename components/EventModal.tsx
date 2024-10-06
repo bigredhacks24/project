@@ -61,16 +61,26 @@ export default function EventModal({
     onNext(eventData);
   };
 
+  const isFormValid = () => {
+    return (
+      eventData.name.trim() !== '' &&
+      eventData.inviteCircle !== '' &&
+      eventData.date !== '' &&
+      eventData.duration !== '' &&
+      eventData.startTime !== '' &&
+      eventData.endTime !== ''
+    );
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[1000px] p-0 overflow-hidden">
         <div className="flex">
           <div className="flex-1 p-6">
             <DialogHeader>
-              <DialogTitle className="text-sm font-normal text-gray-500 mb-1">
+              <DialogTitle className="text-sm font-normal text-gray-500 mb-4">
                 CREATE NEW EVENT
               </DialogTitle>
-              <h2 className="text-2xl font-semibold mb-4">New Event</h2>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="grid gap-4">
               <div className="grid gap-2">
@@ -141,17 +151,21 @@ export default function EventModal({
                 <Button type="button" variant="outline" onClick={onClose}>
                   Cancel
                 </Button>
-                <Button type="submit" className="bg-black text-white">
+                <Button 
+                  type="submit" 
+                  className="bg-black text-white" 
+                  disabled={!isFormValid()}
+                >
                   Next
                 </Button>
               </div>
             </form>
           </div>
-          <div className="w-[400px] h-[400px] ml-[50px] mr-[70px] flex items-center justify-center self-center">
+          <div className="w-[400px] h-[400px] ml-[50px] p-4 mr-[70px] flex items-center justify-center self-center">
             <img
-              src="https://www.liftforfoxsakes.com/wp-content/uploads/2016/03/placeholder-300x300.jpg"
+              src="https://images.unsplash.com/photo-1665686377065-08ba896d16fd?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
               alt="Event"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover rounded-3xl shadow"
             />
           </div>
         </div>

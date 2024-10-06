@@ -1,23 +1,21 @@
 "use client";
 
 import React, { useState } from "react";
-import EventModal from "@/components/EventModal";
+import { Button } from "@/components/ui/button";
 
 interface EventModalButtonProps {
   onOpen: () => void;
 }
 
 const EventModalButton: React.FC<EventModalButtonProps> = ({ onOpen }) => {
-  //   const [isModalOpen, setIsModalOpen] = useState(false);
-
   return (
     <div>
-      <button
+      <Button
         onClick={onOpen}
-        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        className="text-white px-4 py-2 rounded ml-4"
       >
         Create New Event
-      </button>
+      </Button>
     </div>
   );
 };

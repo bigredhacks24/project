@@ -53,15 +53,23 @@ export default function PlanModal({
     setEndTime(eventData.endTime);
   }, [eventData]);
 
-  const [commonAvailability, setCommonAvailability] = useState<
-    { start: Date; end: Date }[]
-  >([
-    { start: new Date(2024, 9, 8, 10, 0), end: new Date(2024, 9, 8, 12, 0) },
-    { start: new Date(2024, 9, 9, 14, 0), end: new Date(2024, 9, 9, 16, 0) },
-    { start: new Date(2024, 9, 11, 9, 0), end: new Date(2024, 9, 11, 11, 0) },
-    { start: new Date(2024, 9, 12, 13, 0), end: new Date(2024, 9, 12, 15, 0) },
-    { start: new Date(2024, 9, 14, 15, 0), end: new Date(2024, 9, 14, 18, 0) },
-  ]);
+  const [commonAvailability, setCommonAvailability] = useState<{ [key: string]: { start: Date; end: Date }[] }>({
+    Sunday: [
+      { start: new Date(2024, 9, 8, 10, 0), end: new Date(2024, 9, 8, 12, 0) },
+    ],
+    Monday: [
+      { start: new Date(2024, 9, 9, 14, 0), end: new Date(2024, 9, 9, 16, 0) },
+    ],
+    Wednesday: [
+      { start: new Date(2024, 9, 11, 9, 0), end: new Date(2024, 9, 11, 11, 0) },
+    ],
+    Thursday: [
+      { start: new Date(2024, 9, 12, 13, 0), end: new Date(2024, 9, 12, 15, 0) },
+    ],
+    Saturday: [
+      { start: new Date(2024, 9, 14, 15, 0), end: new Date(2024, 9, 14, 18, 0) },
+    ],
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -507,22 +507,6 @@ export default function CirclePage() {
                     </div>
                 </div>
             </div>
-            <div className="flex flex-col">
-                <h3 className="text-2xl font-medium mb-4">Past Events</h3>
-                <div className="grid grid-cols-5 space-x-2 overflow-x-auto pb-4">
-                    {pageData.pastEvents.map((event) => (
-                        <EventCard
-                            key={event.event_id}
-                            eventWithAttendance={{
-                                ...event,
-                                group: circle,
-                                event_person_attendance: (event as any)
-                                    .event_person_attendance, // Type assertion
-                            }}
-                        />
-                    ))}
-                </div>
-            </div>
         </div >
     );
 }

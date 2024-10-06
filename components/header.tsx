@@ -15,7 +15,7 @@ export default async function Header() {
           <div className="flex items-center">
             <div className="w-6 h-6 bg-gray-300 rounded-full mr-2"></div>
             <Link href="/" className="text-xl font-semibold text-gray-600">
-              Big Red Hacks
+              Circles
             </Link>
           </div>
           {user ? (

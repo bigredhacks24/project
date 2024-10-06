@@ -11,21 +11,22 @@ export async function GET(req: Request) {
   const userId = url.searchParams.get("userId");
   const groupId = url.searchParams.get("groupId");
 
-  let query = supabase
-    .from("group_person")
-    .select(
-      `
+  let query = supabase.from("group_person").select(
+    `
       group:group_id(*), 
       person:person_id(full_name, email)
     `
-    );
+  );
 
   if (groupId) {
     query = query.eq("group_id", groupId);
   } else if (userId) {
     query = query.eq("person_id", userId);
   } else {
-    return NextResponse.json({ error: "Missing userId or groupId" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Missing userId or groupId" },
+      { status: 400 }
+    );
   }
 
   const { data, error } = await query;
@@ -77,7 +78,11 @@ export async function POST(req: Request) {
       // New person
       const { data: newPerson, error: newPersonError } = await supabase
         .from("person")
-        .insert([{ full_name: person.full_name, email: person.email }])
+        .insert({
+          full_name: person.full_name,
+          email: person.email,
+          person_id: crypto.randomUUID(),
+        })
         .select("*")
         .single();
 
@@ -92,7 +97,11 @@ export async function POST(req: Request) {
       });
 
       // Send invitation email
-      await sendEmail(person.email, "Join Circles!", "You should join circles!");
+      await sendEmail(
+        person.email,
+        "Join Circles!",
+        "You should join circles!"
+      );
     }
   }
 

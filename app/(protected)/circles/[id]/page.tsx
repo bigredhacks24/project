@@ -141,14 +141,14 @@ export default function CirclePage() {
             endHour >= 17.5 &&
             endHour <= 20
           ) {
-            recommendation = "🍽️ Grab dinner?";
+            recommendation = "Grab dinner? 🍽️";
           } else if (
             startHour >= 11 &&
             startHour <= 12.5 &&
             endHour >= 11.5 &&
             endHour <= 13.5
           ) {
-            recommendation = "Grab lunch?";
+            recommendation = "Grab lunch? 🍔";
           } else if (
             startHour >= 19 &&
             startHour <= 22.5 &&
@@ -156,18 +156,18 @@ export default function CirclePage() {
             endHour <= 23.98
           ) {
             recommendation =
-              Math.random() < 0.5 ? "Watch a movie?" : "Game night?";
+              Math.random() < 0.5 ? "Watch a movie? 🎬" : "Game night? 🎮";
           } else if (
             isWeekend &&
             ((startHour >= 6 && startHour <= 11) ||
               (startHour >= 12 && startHour <= 17))
           ) {
             const weekendActivities = [
-              "Play pickleball!",
-              "Tennis era?",
-              "Cafe crawl?",
-              "Lynah rink skating?",
-              "Picnic on the slope",
+              "Play pickleball! 🏓",
+              "Tennis era? 🎾",
+              "Cafe crawl? ☕",
+              "Lynah rink skating? ⛸️",
+              "Picnic on the slope 🧺",
             ];
             recommendation =
               weekendActivities[

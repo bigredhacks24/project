@@ -77,10 +77,17 @@ export default function Home() {
             `);
           if (groupsError) throw groupsError;
 
-          const transformedGroups = groupsData.map((group: any) => ({
-            ...group,
-            event_count: group.event_count[0] || { count: 0 }
-          }));
+          const transformedGroups = groupsData.reduce((acc: any[], group: any) => {
+            if (!acc.some(g => g.group_id === group.group_id)) {
+              acc.push({
+                ...group,
+                event_count: group.event_count[0] || { count: 0 }
+              });
+            }
+            return acc;
+          }, []);
+
+          console.log(transformedGroups);
 
           setGroups(transformedGroups);
 
@@ -117,41 +124,6 @@ export default function Home() {
 
   if (!user) {
     return <div>Please log in to view this page.</div>;
-
-  // Fetch events
-  const { data: events, error: eventsError } = await supabase
-    .from("event")
-    .select(
-      `
-      *,
-      event_person_attendance (
-        attending
-      )
-    `
-    )
-    .eq("event_person_attendance.person_id", user.id);
-
-  // Fetch friends
-  const { data: friends, error: friendsError } = await supabase
-    .from("person")
-    .select("*")
-    .neq("person_id", user.id);
-
-  // Fetch groups
-  const { data: groups, error: groupsError } = await supabase
-    .from("group")
-    .select(`
-    *,
-    group_person!inner (person_id)
-    `)
-    .eq("group_person.person_id", user.id);
-    
-  if (eventsError || friendsError || groupsError) {
-    console.error(
-      "Error fetching data:",
-      eventsError || friendsError || groupsError
-    );
-    return <div>Error loading data. Please try again later.</div>;
   }
 
   return (
@@ -167,14 +139,14 @@ export default function Home() {
         </div>
       </div>
       <div className="w-[1222px] items-start gap-9 grid grid-cols-2">
-        <div className="flex h-[291px] flex-col items-start gap-6 flex-[1_0_0]">
+        <div>
           <div className="flex items-start gap-6">
             <div className="text-black font-roboto text-[36px] font-medium leading-[20.25px] tracking-[0.338px]">
               Your Circles
             </div>
             <CreateCircleButton />
           </div>
-          <div className="flex overflow-x-scroll gap-x-4 w-full">
+          <div className="flex overflow-x-scroll gap-x-4 w-full mt-[45px]">
             {groups &&
               groups.map((group: Group) => (
                 <div key={group.group_id}>
@@ -183,45 +155,39 @@ export default function Home() {
                     eventCount={group.event_count?.count || 0}
                   />
                 </div>
-              ))}
-          <div className="flex flex-wrap gap-4 w-full">
-
-          {Array.isArray(groups) && groups.length > 0 ? (
-     groups.map((group: Group) => (
-       <div key={group.group_id} className="w-[calc(33.333%-16px)]">
-         <CirclesCard group={group} eventCount={0} />
-       </div>
-     ))
-   ) : (
-     <div>No circles found.</div>
-   )}
-
+              ))
+            }
+            {!groups && (
+              <div>No circles found.</div>
+            )}
           </div>
         </div>
-        <div className="flex flex-col items-start gap-6 flex-[1_0_0]">
-          <div className="flex items-center justify-between w-full">
-            <div className="text-black font-roboto text-[36px] font-medium leading-[20.25px] tracking-[0.338px]">
-              Your Friends
+        <div>
+          <div className="flex flex-col items-start gap-6 flex-[1_0_0]">
+            <div className="flex items-center justify-between w-full">
+              <div className="text-black font-roboto text-[36px] font-medium leading-[20.25px] tracking-[0.338px] mr-4">
+                Your Friends
+              </div>
+              <InviteFriendButton />
             </div>
-            <InviteFriendButton />
-          </div>
-          <div className="flex flex-col items-center gap-[8px] self-stretch justify-center overflow-y-scroll h-[400px] pt-20">
-            {friends &&
-              friends.map((friend: Friend) => (
-                <PersonCard key={friend.person_id} friend={friend} />
-              ))}
+            <div className="flex flex-col items-center gap-[8px] self-stretch justify-center overflow-y-scroll h-[400px] pt-20">
+              {friends &&
+                friends.map((friend: Friend) => (
+                  <PersonCard key={friend.person_id} friend={friend} />
+                ))}
+            </div>
           </div>
         </div>
-      </div>
 
-      <Dialog open={!!selectedEventWithAttendance} onOpenChange={() => setselectedEventWithAttendance(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Event Files</DialogTitle>
-          </DialogHeader>
-          {selectedEventWithAttendance && <FileUploadAndGallery event={selectedEventWithAttendance} />}
-        </DialogContent>
-      </Dialog>
+        <Dialog open={!!selectedEventWithAttendance} onOpenChange={() => setselectedEventWithAttendance(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Event Files</DialogTitle>
+            </DialogHeader>
+            {selectedEventWithAttendance && <FileUploadAndGallery event={selectedEventWithAttendance} />}
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }

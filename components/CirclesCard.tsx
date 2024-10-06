@@ -34,7 +34,7 @@ export default function CirclesCard({ group, eventCount }: CirclesCardProps) {
           <div className="flex h-5 justify-center items-center">
             <div className="flex justify-center items-center gap-2.5">
               <div className="text-[#9C9C9C] font-inter text-xs font-normal leading-[1.2]">
-                <p>Hi</p>
+                <p>A lovely group!</p>
               </div>
             </div>
           </div>

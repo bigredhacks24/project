@@ -25,47 +25,56 @@ type CirclePageData = {
 };
 
 export default function CirclePage() {
-    const { id } = useParams();
-    const [circle, setCircle] = useState<CircleData | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [pageData, setPageData] = useState<CirclePageData>({
-        upcomingEvents: [],
-        suggestedEvents: [],
-        pastEvents: [],
-    });
-    const [commonAvailability, setCommonAvailability] = useState<
-        { start: Date; end: Date; }[]
-    >([
-        { start: new Date(2024, 9, 8, 10, 0), end: new Date(2024, 9, 8, 12, 0) },
-        { start: new Date(2024, 9, 9, 14, 0), end: new Date(2024, 9, 9, 16, 0) },
-        { start: new Date(2024, 9, 11, 9, 0), end: new Date(2024, 9, 11, 11, 0) },
-        { start: new Date(2024, 9, 12, 13, 0), end: new Date(2024, 9, 12, 15, 0) },
-        { start: new Date(2024, 9, 14, 15, 0), end: new Date(2024, 9, 14, 18, 0) },
-    ]);
-    const [newEvent, setNewEvent] = useState({
-        name: "",
-        date: "",
-        start_time: "",
-        end_time: "",
-        description: "",
-        allowPlusOne: false,
-    });
-    const [selectedEventWithAttendance, setselectedEventWithAttendance] = useState<EventWithAttendance | null>(null);
+  const { id } = useParams();
+  const [circle, setCircle] = useState<CircleData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [pageData, setPageData] = useState<CirclePageData>({
+    upcomingEvents: [],
+    suggestedEvents: [],
+    pastEvents: [],
+  });
+  const [commonAvailability, setCommonAvailability] = useState<{
+    [key: string]: { start: Date; end: Date }[];
+  }>({});
+  const [newEvent, setNewEvent] = useState({
+    name: "",
+    date: "",
+    start_time: "",
+    end_time: "",
+    description: "",
+    allowPlusOne: false,
+  });
+  const router = useRouter();
 
-    useEffect(() => {
-        const fetchCircleData = async () => {
-            try {
-                const response = await fetch(`/api/groups?groupId=${id}`);
-                if (!response.ok) {
-                    throw new Error("Failed to fetch circle data");
-                }
-                const data = await response.json();
-                if (data && data.length > 0) {
-                    setCircle({
-                        ...data[0].group,
-                        members: data.map((item: any) => item.person),
-                    });
+  useEffect(() => {
+    const fetchCircleData = async () => {
+      try {
+        const response = await fetch(`/api/groups?groupId=${id}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch circle data");
+        }
+        const data = await response.json();
+        console.log("Raw group data:", data); // Log the raw data
 
+        if (data && data.length > 0) {
+          const circleData = {
+            ...data[0].group,
+            members: data.map((item: any) => item.person),
+          };
+          console.log("Processed circle data:", circleData); // Log the processed data
+          console.log("Circle members:", circleData.members); // Log the members specifically
+
+          setCircle(circleData);
+
+          if (circleData.members && circleData.members.length > 0) {
+            // Fetch common free periods
+            const commonFreePeriods = await fetchFreePeriods(circleData.members);
+            console.log("Common free periods:", commonFreePeriods);
+
+            setCommonAvailability(commonFreePeriods);
+          } else {
+            console.warn("No members found for this circle");
+          }
                     // Fetch events for this circle
                     const eventsResponse = await fetch(`/api/events?groupId=${id}`);
                     if (!eventsResponse.ok) {
@@ -94,6 +103,7 @@ export default function CirclePage() {
             }
         };
 
+
         fetchCircleData();
     }, [id]);
 
@@ -115,6 +125,91 @@ export default function CirclePage() {
                 type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
         }));
     };
+
+    const fetchFreePeriods = async (members: any[]) => {
+    const allFreePeriods: { [key: string]: { start: Date; end: Date }[] }[] =
+      await Promise.all(
+        members.map(async (member) => {
+          const response = await fetch(
+            `/api/calendar-data/date?userId=${member.person_id}`
+          );
+          if (!response.ok) {
+            console.error(
+              `Failed to fetch free periods for user ${member.person_id}`
+            );
+            return {};
+          }
+          const data = await response.json();
+          console.log(
+            `Free periods for user ${member.person_id}:`,
+            data.freePeriods
+          );
+          return data.freePeriods;
+        })
+      );
+
+    console.log("All free periods:", JSON.stringify(allFreePeriods, null, 2));
+
+    // Intersect free periods
+    const intersectedFreePeriods: {
+      [key: string]: { start: Date; end: Date }[];
+    } = {};
+    const days = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+
+    days.forEach((day) => {
+      const dayFreePeriods = allFreePeriods.map(
+        (userPeriods) => userPeriods[day] || []
+      );
+      intersectedFreePeriods[day] = intersectTimeBlocks(dayFreePeriods);
+    });
+
+    console.log('Intersected free periods:', JSON.stringify(intersectedFreePeriods, null, 2));
+
+    return intersectedFreePeriods;
+  };
+
+  const intersectTimeBlocks = (
+    timeBlocksArrays: { start: Date; end: Date }[][]
+  ) => {
+    if (timeBlocksArrays.length === 0) return [];
+
+    let result = timeBlocksArrays[0];
+    for (let i = 1; i < timeBlocksArrays.length; i++) {
+      result = result
+        .flatMap((block1) =>
+          timeBlocksArrays[i].map((block2) => ({
+            start: new Date(
+              Math.max(
+                new Date(block1.start).getTime(),
+                new Date(block2.start).getTime()
+              )
+            ),
+            end: new Date(
+              Math.min(
+                new Date(block1.end).getTime(),
+                new Date(block2.end).getTime()
+              )
+            ),
+          }))
+        )
+        .filter((block) => block.start < block.end);
+    }
+    return result;
+  };
+
+  // Add this helper function at the beginning of the component
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1).toString().padStart(2, "0")}/${date.getFullYear().toString().slice(-2)} ${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
+  };
 
     const handleCreateEvent = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -417,5 +512,23 @@ export default function CirclePage() {
                 </div>
             </div>
         </div>
-    );
+        <div className="flex flex-col">
+          <h3 className="text-2xl font-medium mb-4">Past Events</h3>
+          <div className="grid grid-cols-5 space-x-2 overflow-x-auto pb-4">
+            {pageData.pastEvents.map((event) => (
+              <EventCard
+                key={event.event_id}
+                eventAttendance={{
+                  ...event,
+                  group_id: circle.group_id,
+                  event_person_attendance: (event as any)
+                    .event_person_attendance, // Type assertion
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

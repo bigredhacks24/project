@@ -37,9 +37,12 @@ export default function RootLayout({
                   <div className="flex gap-5 items-center font-semibold">
                   </div>
                   {!hasEnvVars ? <EnvVarWarning /> : <HeaderAuth />}
-                </div>
-              </nav>
-              <div className="flex flex-grow py-10">
+              </div>
+            </nav>
+
+            <div className="flex-1 container mx-auto flex flex-col items-center w-full">
+              <div className="flex flex-grow py-10 mb-12 w-full flex-col items-center">                 {/* bottom margin added to address footer overlap temporarily */}
+
                 {children}
               </div>
               <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-sm gap-8 py-8">
@@ -48,7 +51,7 @@ export default function RootLayout({
                 </p>
                 <ThemeSwitcher />
               </footer>
-            </div>
+
           </main>
         </ThemeProvider>
       </body>

@@ -31,27 +31,8 @@ const EventCarousel: React.FC<EventCarouselProps> = ({ events, onEventClick }) =
           </div>
         ))}
       </div>
-      {events.length > eventsPerPage && (
-        <button
-          onClick={nextPage}
-          className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-md"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </button>
-      )}
+
+      
     </div>
   );
 };

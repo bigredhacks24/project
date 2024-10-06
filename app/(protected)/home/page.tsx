@@ -4,6 +4,8 @@ import PersonCard from "@/components/PersonCard";
 import CirclesCard from "@/components/CirclesCard";
 import { EventAttendance, Friend, Group } from "@/types/general-types";
 import CreateCircleButton from "@/components/CreateCircleButton";
+import EventCarousel from "@/components/EventCarousel";
+
 interface EventWithAttendance {
   event_id: string;
   group_id: string | null;
@@ -68,13 +70,7 @@ export default async function Home() {
               Upcoming Events
             </div>
           </div>
-          <div className="flex items-start gap-3 self-stretch">
-            <div className="flex h-[313px] items-start gap-3 self-stretch">
-              {events.map((event: EventWithAttendance) => (
-                <EventCard key={event.event_id} eventAttendance={event} />
-              ))}
-            </div>
-          </div>
+          <EventCarousel events={events} />
         </div>
       </div>
       <div className="flex w-[1222px] items-start gap-9">

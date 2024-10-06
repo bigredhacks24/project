@@ -1,9 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import Image from "next/image";
+
+interface Person {
+  person_id: string;
+  full_name: string;
+  email: string;
+  profile_photo?: string;
+}
 
 interface CreateCircleModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (circleName: string, inviteEmails: string[]) => void;
+  onCreate: (circleName: string, invitedPeople: Person[]) => void;
 }
 
 const CreateCircleModal: React.FC<CreateCircleModalProps> = ({
@@ -13,24 +21,39 @@ const CreateCircleModal: React.FC<CreateCircleModalProps> = ({
 }) => {
   const [circleName, setCircleName] = useState("");
   const [inviteEmails, setInviteEmails] = useState([""]);
+  const [invitedPeople, setInvitedPeople] = useState<Person[]>([]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setCircleName("");
+      setInviteEmails([""]);
+      setInvitedPeople([]);
+    }
+  }, [isOpen]);
 
   const handleAddEmail = () => {
     setInviteEmails([...inviteEmails, ""]);
   };
 
-  const handleEmailChange = (index: number, value: string) => {
+  const handleEmailChange = async (index: number, value: string) => {
     const newEmails = [...inviteEmails];
     newEmails[index] = value;
     setInviteEmails(newEmails);
+
+    if (value.trim() !== "") {
+      const response = await fetch(`/api/people?email=${encodeURIComponent(value)}`);
+      const data = await response.json();
+
+      if (data.person) {
+        setInvitedPeople(prev => [...prev.filter(p => p.email !== value), data.person]);
+      } else {
+        setInvitedPeople(prev => prev.filter(p => p.email !== value));
+      }
+    }
   };
 
   const handleSubmit = () => {
-    onCreate(
-      circleName,
-      inviteEmails.filter((email) => email.trim() !== "")
-    );
-    setCircleName("");
-    setInviteEmails([""]);
+    onCreate(circleName, invitedPeople);
     onClose();
   };
 
@@ -49,14 +72,27 @@ const CreateCircleModal: React.FC<CreateCircleModalProps> = ({
         />
         <h3 className="text-lg font-semibold mb-2">Invite Friends</h3>
         {inviteEmails.map((email, index) => (
-          <input
-            key={index}
-            type="email"
-            value={email}
-            onChange={(e) => handleEmailChange(index, e.target.value)}
-            placeholder="Friend's Email"
-            className="w-full p-2 mb-2 border rounded"
-          />
+          <div key={index} className="mb-2">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => handleEmailChange(index, e.target.value)}
+              placeholder="Friend's Email"
+              className="w-full p-2 border rounded"
+            />
+            {invitedPeople.find(p => p.email === email) && (
+              <div className="flex items-center mt-1">
+                <Image
+                  src={invitedPeople.find(p => p.email === email)?.profile_photo || "/default-avatar.png"}
+                  alt="Profile"
+                  width={24}
+                  height={24}
+                  className="rounded-full mr-2"
+                />
+                <span>{invitedPeople.find(p => p.email === email)?.full_name}</span>
+              </div>
+            )}
+          </div>
         ))}
         <button
           onClick={handleAddEmail}

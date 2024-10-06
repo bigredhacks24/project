@@ -16,8 +16,8 @@ export default async function Header() {
       <div className="mx-auto px-4 sm:px-6 lg:px-8 w-screen">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-            <Image src={logo} alt="Circle Logo" height={35} className="mr-2" />
-            <Link href="/" className="text-xl font-semibold text-gray-600">
+            <Link href="/" className="text-xl font-semibold text-gray-600 flex items-center">
+              <Image src={logo} alt="Circle Logo" height={35} className="mr-2" />
               Circles
             </Link>
           </div>

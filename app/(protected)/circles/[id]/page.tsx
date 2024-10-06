@@ -10,9 +10,7 @@ import WeeklyCalendar from "@/components/WeeklyCalendar";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, Check } from "lucide-react";
 import { sendEmail } from "@/utils/email";
-import { getColorFromString } from "@/utils/utils";
 import QuickScheduleModal from "@/components/QuickScheduleModal";
-import { count } from "console";
 
 // import mailgun from 'mailgun-js';
 // import mailcomposer from "mailcomposer";
@@ -392,6 +390,16 @@ export default function CirclePage() {
         allowPlusOne: false,
       });
 
+      // Update the state with the new event
+      setPageData((prevData) => ({
+        ...prevData,
+        upcomingEvents: [...prevData.upcomingEvents, createdEvent].sort(
+          (a, b) =>
+            new Date(a.start_timestamp).getTime() -
+            new Date(b.start_timestamp).getTime()
+        ),
+      }));
+
       // Redirect to the new group page if a new group was created
       if (targetGroupId !== id) {
         router.push(`/circles/${targetGroupId}`);
@@ -579,6 +587,13 @@ View more at <a href="https://findcircles.co/group/${circle.group_id}">Circles</
         new Set(prev).add(`${recommendation}-${time}`)
       );
 
+      setIsQuickScheduleModalOpen(false);
+    } catch (error) {
+      console.error("Error creating event:", error);
+      alert("Error creating event");
+    }
+  };
+
   const handlePlusOneChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const isChecked = e.target.checked;
     setNewEvent((prev) => ({ ...prev, allowPlusOne: isChecked }));
@@ -656,12 +671,6 @@ View more at <a href="https://findcircles.co/group/${circle.group_id}">Circles</
     }
   };
 
-      setIsQuickScheduleModalOpen(false);
-    } catch (error) {
-      console.error("Error creating event:", error);
-      alert("Failed to create event. Please try again.");
-    }
-  };
   if (isLoading) {
     return <Spinner />;
   }

@@ -242,18 +242,20 @@ export default function Home() {
           </div>
         </div>
         <div>
-          <div className="flex flex-col items-start gap-6 flex-[1_0_0]">
-            <div className="flex items-center justify-between w-full">
-              <div className="text-black font-roboto text-[36px] font-medium leading-[20.25px] tracking-[0.338px] mr-4">
+          <div className="flex flex-col h-[400px]">
+            <div className="flex items-center justify-between w-full mb-4">
+              <div className="text-black font-roboto text-[36px] font-medium leading-[20.25px] tracking-[0.338px]">
                 Your Friends
               </div>
               <InviteFriendButton />
             </div>
-            <div className="flex flex-col items-center gap-[8px] self-stretch justify-center overflow-y-scroll h-[400px] pt-20">
-              {friends &&
-                friends.map((friend: Friend) => (
-                  <PersonCard key={friend.person_id} friend={friend} />
-                ))}
+            <div className="flex-1 overflow-y-auto pr-4 pb-4">
+              <div className="space-y-2 mt-[20px]">
+                {friends &&
+                  friends.map((friend: Friend) => (
+                    <PersonCard key={friend.person_id} friend={friend} />
+                  ))}
+              </div>
             </div>
           </div>
         </div>

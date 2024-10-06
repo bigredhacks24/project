@@ -132,18 +132,18 @@ export default function CirclePage() {
             setPageData(prevData => {
                 const now = new Date();
                 const isUpcoming = new Date(createdEvent.start_timestamp) > now;
-                
+
                 if (isUpcoming) {
                     return {
                         ...prevData,
-                        upcomingEvents: [...prevData.upcomingEvents, createdEvent].sort((a, b) => 
+                        upcomingEvents: [...prevData.upcomingEvents, createdEvent].sort((a, b) =>
                             new Date(a.start_timestamp).getTime() - new Date(b.start_timestamp).getTime()
                         )
                     };
                 } else {
                     return {
                         ...prevData,
-                        pastEvents: [...prevData.pastEvents, createdEvent].sort((a, b) => 
+                        pastEvents: [...prevData.pastEvents, createdEvent].sort((a, b) =>
                             new Date(b.end_timestamp).getTime() - new Date(a.end_timestamp).getTime()
                         )
                     };
@@ -316,7 +316,10 @@ export default function CirclePage() {
                     <div className="grid grid-cols-5 space-x-2 overflow-x-auto pb-4">
                         {pageData.pastEvents.map((event) => (
                             <EventCard key={event.event_id} eventAttendance={{
-                                event: event,
+                                event: {
+                                    ...event,
+                                    group_id: circle.group_id
+                                },
                                 group: circle,
                                 attending: false // You might want to fetch actual attendance data
                             }} />

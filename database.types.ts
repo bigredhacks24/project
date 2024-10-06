@@ -15,7 +15,7 @@ export type Database = {
           description: string | null
           end_timestamp: string
           event_id: string
-          group_id: string | null
+          group_id: string
           name: string
           start_timestamp: string
         }
@@ -24,7 +24,7 @@ export type Database = {
           description?: string | null
           end_timestamp: string
           event_id?: string
-          group_id?: string | null
+          group_id: string
           name: string
           start_timestamp: string
         }
@@ -33,7 +33,7 @@ export type Database = {
           description?: string | null
           end_timestamp?: string
           event_id?: string
-          group_id?: string | null
+          group_id?: string
           name?: string
           start_timestamp?: string
         }

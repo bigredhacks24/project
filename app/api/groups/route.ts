@@ -14,7 +14,7 @@ export async function GET(req: Request) {
   let query = supabase.from("group_person").select(
     `
       group:group_id(*), 
-      person:person_id(full_name, email)
+      person:person_id(full_name, email, person_id) // Ensure person_id is included
     `
   );
 

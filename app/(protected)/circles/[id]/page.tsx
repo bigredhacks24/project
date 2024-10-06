@@ -30,15 +30,9 @@ export default function CirclePage() {
     suggestedEvents: [],
     pastEvents: [],
   });
-  const [commonAvailability, setCommonAvailability] = useState<
-    { start: Date; end: Date }[]
-  >([
-    { start: new Date(2024, 9, 8, 10, 0), end: new Date(2024, 9, 8, 12, 0) },
-    { start: new Date(2024, 9, 9, 14, 0), end: new Date(2024, 9, 9, 16, 0) },
-    { start: new Date(2024, 9, 11, 9, 0), end: new Date(2024, 9, 11, 11, 0) },
-    { start: new Date(2024, 9, 12, 13, 0), end: new Date(2024, 9, 12, 15, 0) },
-    { start: new Date(2024, 9, 14, 15, 0), end: new Date(2024, 9, 14, 18, 0) },
-  ]);
+  const [commonAvailability, setCommonAvailability] = useState<{
+    [key: string]: { start: Date; end: Date }[];
+  }>({});
   const [newEvent, setNewEvent] = useState({
     name: "",
     date: "",
@@ -57,11 +51,27 @@ export default function CirclePage() {
           throw new Error("Failed to fetch circle data");
         }
         const data = await response.json();
+        console.log("Raw group data:", data); // Log the raw data
+
         if (data && data.length > 0) {
-          setCircle({
+          const circleData = {
             ...data[0].group,
             members: data.map((item: any) => item.person),
-          });
+          };
+          console.log("Processed circle data:", circleData); // Log the processed data
+          console.log("Circle members:", circleData.members); // Log the members specifically
+
+          setCircle(circleData);
+
+          if (circleData.members && circleData.members.length > 0) {
+            // Fetch common free periods
+            const commonFreePeriods = await fetchFreePeriods(circleData.members);
+            console.log("Common free periods:", commonFreePeriods);
+
+            setCommonAvailability(commonFreePeriods);
+          } else {
+            console.warn("No members found for this circle");
+          }
 
           // Fetch events for this circle
           const eventsResponse = await fetch(`/api/events?groupId=${id}`);
@@ -80,9 +90,11 @@ export default function CirclePage() {
 
           setPageData({
             upcomingEvents,
-            suggestedEvents: [], // You might want to implement a suggestion algorithm here
+            suggestedEvents: [],
             pastEvents,
           });
+        } else {
+          console.warn("No data returned for this group ID");
         }
       } catch (error) {
         console.error("Error fetching circle data:", error);
@@ -93,6 +105,85 @@ export default function CirclePage() {
 
     fetchCircleData();
   }, [id]);
+
+  const fetchFreePeriods = async (members: any[]) => {
+    const allFreePeriods: { [key: string]: { start: Date; end: Date }[] }[] =
+      await Promise.all(
+        members.map(async (member) => {
+          const response = await fetch(
+            `/api/calendar-data/date?userId=${member.person_id}`
+          );
+          if (!response.ok) {
+            console.error(
+              `Failed to fetch free periods for user ${member.person_id}`
+            );
+            return {};
+          }
+          const data = await response.json();
+          console.log(
+            `Free periods for user ${member.person_id}:`,
+            data.freePeriods
+          );
+          return data.freePeriods;
+        })
+      );
+
+    console.log("All free periods:", JSON.stringify(allFreePeriods, null, 2));
+
+    // Intersect free periods
+    const intersectedFreePeriods: {
+      [key: string]: { start: Date; end: Date }[];
+    } = {};
+    const days = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+
+    days.forEach((day) => {
+      const dayFreePeriods = allFreePeriods.map(
+        (userPeriods) => userPeriods[day] || []
+      );
+      intersectedFreePeriods[day] = intersectTimeBlocks(dayFreePeriods);
+    });
+
+    console.log('Intersected free periods:', JSON.stringify(intersectedFreePeriods, null, 2));
+
+    return intersectedFreePeriods;
+  };
+
+  const intersectTimeBlocks = (
+    timeBlocksArrays: { start: Date; end: Date }[][]
+  ) => {
+    if (timeBlocksArrays.length === 0) return [];
+
+    let result = timeBlocksArrays[0];
+    for (let i = 1; i < timeBlocksArrays.length; i++) {
+      result = result
+        .flatMap((block1) =>
+          timeBlocksArrays[i].map((block2) => ({
+            start: new Date(
+              Math.max(
+                new Date(block1.start).getTime(),
+                new Date(block2.start).getTime()
+              )
+            ),
+            end: new Date(
+              Math.min(
+                new Date(block1.end).getTime(),
+                new Date(block2.end).getTime()
+              )
+            ),
+          }))
+        )
+        .filter((block) => block.start < block.end);
+    }
+    return result;
+  };
 
   // Add this helper function at the beginning of the component
   const formatDate = (dateString: string) => {

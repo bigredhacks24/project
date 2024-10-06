@@ -7,6 +7,7 @@ import CreateCircleButton from "@/components/CreateCircleButton";
 import EventCarousel from "@/components/EventCarousel";
 import { Button } from "@/components/ui/button";
 import InviteFriendButton from "@/components/InviteFriendButton";
+
 interface EventWithAttendance {
   event_id: string;
   group_id: string | null;
@@ -58,8 +59,6 @@ export default async function Home() {
     `)
     .eq("group_person.person_id", user.id);
     
-console.log("groups: " + groups?.length);
-
   if (eventsError || friendsError || groupsError) {
     console.error(
       "Error fetching data:",

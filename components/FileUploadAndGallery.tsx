@@ -133,9 +133,9 @@ export default function FileUploadAndGallery({ event }: FileUploadAndGalleryProp
                     </div>
                     <div className="col-span-1">
                         {thumbnail ? (
-                            <img src={thumbnail.url} alt="Event Thumbnail" className="w-full h-full object-cover" />
+                            <img src={thumbnail.url} alt="Event Thumbnail" className="w-full h-full object-cover rounded-xl" />
                         ) : (
-                            <div className="aspect-square bg-gray-200"></div>
+                            <div className="aspect-square bg-gray-200 rounded-xl"></div>
                         )}
                     </div>
                 </div>
@@ -162,10 +162,10 @@ export default function FileUploadAndGallery({ event }: FileUploadAndGalleryProp
                     </Button>
                     <div className="grid grid-cols-4 gap-2">
                         {files.map((file, index) => (
-                            <img key={index} src={file.url} alt={`Gallery image ${index + 1}`} className="aspect-square object-cover" />
+                            <img key={index} src={file.url} alt={`Gallery image ${index + 1}`} className="aspect-square object-cover rounded-xl" />
                         ))}
                         {[...Array(8 - files.length)].map((_, index) => (
-                            <div key={index + files.length} className="aspect-square bg-gray-200"></div>
+                            <div key={index + files.length} className="aspect-square bg-gray-200 rounded-xl"></div>
                         ))}
                     </div>
                 </div>

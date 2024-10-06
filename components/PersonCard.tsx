@@ -7,7 +7,7 @@ interface PersonCardProps {
 
 const PersonCard: React.FC<PersonCardProps> = ({ friend }) => {
   return (
-    <div className="flex h-[70px] p-[17px] items-start gap-[16px] self-stretch rounded-[6px] border border-[#E4E4E7] bg-white shadow-[0_4px_6px_-1px_rgba(0,0,0,0.10),0_2px_4px_-2px_rgba(0,0,0,0.10)]">
+    <div className="flex h-[70px] p-[17px] gap-[16px] self-stretch rounded-[6px] border border-[#E4E4E7] bg-white shadow-[0_4px_6px_-1px_rgba(0,0,0,0.10),0_2px_4px_-2px_rgba(0,0,0,0.10)] items-center">
       {friend.profile_picture ? (
         <div className="w-9 h-9 rounded-[48px] overflow-hidden">
           <img

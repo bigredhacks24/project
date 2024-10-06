@@ -9,11 +9,11 @@ interface CirclesCardProps {
   eventCount: number;
 }
 
-const CirclesCard: React.FC<CirclesCardProps> = ({ group, eventCount }) => {
+export default function CirclesCard({ group, eventCount }: CirclesCardProps) {
   const router = useRouter();
 
   const handleClick = () => {
-    router.push(`/groups/${group.group_id}`);
+    router.push(`/circles/${group.group_id}`);
   };
 
   return (
@@ -34,7 +34,7 @@ const CirclesCard: React.FC<CirclesCardProps> = ({ group, eventCount }) => {
           <div className="flex h-5 justify-center items-center">
             <div className="flex justify-center items-center gap-2.5">
               <div className="text-[#9C9C9C] font-inter text-xs font-normal leading-[1.2]">
-                <p>Hi</p>
+                <p>A lovely group!</p>
               </div>
             </div>
           </div>
@@ -49,6 +49,4 @@ const CirclesCard: React.FC<CirclesCardProps> = ({ group, eventCount }) => {
       </div>
     </div>
   );
-};
-
-export default CirclesCard;
+}

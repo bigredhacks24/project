@@ -104,6 +104,7 @@ export default function HomeClient({
         isOpen={isEventModalOpen}
         onClose={handleEventModalClose}
         onNext={handleNext}
+        groups={groups}
       />
       <PlanModal
         isOpen={isPlanModalOpen}

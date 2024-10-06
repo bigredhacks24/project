@@ -15,17 +15,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Group } from "@/types/general-types";
 
 interface EventModalProps {
   isOpen: boolean;
   onClose: () => void;
   onNext: (data: any) => void;
+  groups: Group[];
 }
 
 export default function EventModal({
   isOpen,
   onClose,
   onNext,
+  groups,
 }: EventModalProps) {
   const [eventData, setEventData] = useState({
     name: "",
@@ -77,8 +80,11 @@ export default function EventModal({
                     <SelectValue placeholder="Select friend circles" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="circle1">Circle 1</SelectItem>
-                    <SelectItem value="circle2">Circle 2</SelectItem>
+                    {groups.map((group) => (
+                      <SelectItem key={group.group_id} value={group.group_id}>
+                        {group.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

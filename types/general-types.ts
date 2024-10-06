@@ -24,6 +24,7 @@ export interface Person {
   person_id: string;
   full_name: string;
   email: string;
+  profile_picture: string | null;
 }
 
 export interface GroupDetails {
@@ -42,6 +43,7 @@ export interface Friend {
   full_name: string | null;
   email: string | null;
   phone_number: string | null;
+  profile_picture: string | null;
   friends: string[] | null; // Array of person_id's representing the user's friends
 }
 

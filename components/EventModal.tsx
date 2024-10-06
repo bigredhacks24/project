@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,8 +20,18 @@ import { Group } from "@/types/general-types";
 interface EventModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onNext: (data: any) => void;
+  onNext: (data: EventData) => void;
   groups: Group[];
+  initialData: EventData;
+}
+
+interface EventData {
+  name: string;
+  inviteCircle: string;
+  date: string;
+  duration: string;
+  startTime: string;
+  endTime: string;
 }
 
 export default function EventModal({
@@ -29,15 +39,13 @@ export default function EventModal({
   onClose,
   onNext,
   groups,
+  initialData,
 }: EventModalProps) {
-  const [eventData, setEventData] = useState({
-    name: "",
-    inviteCircle: "",
-    date: "",
-    duration: "",
-    startTime: "",
-    endTime: "",
-  });
+  const [eventData, setEventData] = useState<EventData>(initialData);
+
+  useEffect(() => {
+    setEventData(initialData);
+  }, [initialData]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;

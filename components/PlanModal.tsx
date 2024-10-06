@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -18,23 +18,40 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import WeeklyCalendar from "@/components/WeeklyCalendar";
 
+interface EventData {
+  name: string;
+  inviteCircle: string;
+  date: string;
+  duration: string;
+  startTime: string;
+  endTime: string;
+}
+
 interface PlanModalProps {
   isOpen: boolean;
   onClose: () => void;
-  eventData: any;
+  onBack: () => void;
+  eventData: EventData;
 }
 
 export default function PlanModal({
   isOpen,
   onClose,
+  onBack,
   eventData,
 }: PlanModalProps) {
-  const [date, setDate] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
+  const [date, setDate] = useState(eventData.date);
+  const [startTime, setStartTime] = useState(eventData.startTime);
+  const [endTime, setEndTime] = useState(eventData.endTime);
   const [activity, setActivity] = useState("");
   const [description, setDescription] = useState("");
   const [guestsPlusOne, setGuestsPlusOne] = useState(false);
+
+  useEffect(() => {
+    setDate(eventData.date);
+    setStartTime(eventData.startTime);
+    setEndTime(eventData.endTime);
+  }, [eventData]);
 
   // Mock data for common availability
   const [commonAvailability, setCommonAvailability] = useState<
@@ -56,7 +73,7 @@ export default function PlanModal({
               <DialogTitle className="text-sm font-normal text-gray-500 mb-1">
                 PLAN EVENT
               </DialogTitle>
-              <h2 className="text-2xl font-semibold mb-4">New Event</h2>
+              <h2 className="text-2xl font-semibold mb-4">{eventData.name}</h2>
               <p className="text-sm text-gray-500">
                 Choose based on your availabilities and recommendations.
               </p>
@@ -64,32 +81,25 @@ export default function PlanModal({
             <form className="mt-4 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Pick a date
+                  Date
                 </label>
-                <Select onValueChange={setDate}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select date" />
-                  </SelectTrigger>
-                  <SelectContent>{/* Add date options */}</SelectContent>
-                </Select>
+                <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Pick a time
+                  Time
                 </label>
                 <div className="flex space-x-2">
-                  <Select onValueChange={setStartTime}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Start time" />
-                    </SelectTrigger>
-                    <SelectContent>{/* Add time options */}</SelectContent>
-                  </Select>
-                  <Select onValueChange={setEndTime}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="End time" />
-                    </SelectTrigger>
-                    <SelectContent>{/* Add time options */}</SelectContent>
-                  </Select>
+                  <Input
+                    type="time"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                  />
+                  <Input
+                    type="time"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                  />
                 </div>
               </div>
               <div>
@@ -129,7 +139,7 @@ export default function PlanModal({
                 </label>
               </div>
               <div className="flex justify-start space-x-3">
-                <Button variant="outline" onClick={onClose}>
+                <Button variant="outline" onClick={onBack}>
                   Back
                 </Button>
                 <Button type="submit" className="bg-black text-white">

@@ -31,6 +31,15 @@ interface Event {
   event_person_attendance: { attending: boolean | null }[];
 }
 
+interface EventData {
+  name: string;
+  inviteCircle: string;
+  date: string;
+  duration: string;
+  startTime: string;
+  endTime: string;
+}
+
 export default function HomeClient({
   events,
   friends,
@@ -38,7 +47,7 @@ export default function HomeClient({
 }: HomeClientProps) {
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
-  const [eventData, setEventData] = useState({
+  const [eventData, setEventData] = useState<EventData>({
     name: "",
     inviteCircle: "",
     date: "",
@@ -47,12 +56,42 @@ export default function HomeClient({
     endTime: "",
   });
 
-  const handleEventModalClose = () => setIsEventModalOpen(false);
-  const handlePlanModalClose = () => setIsPlanModalOpen(false);
-  const handleNext = (data: typeof eventData) => {
+  const handleEventModalClose = () => {
+    setIsEventModalOpen(false);
+    setEventData({
+      name: "",
+      inviteCircle: "",
+      date: "",
+      duration: "",
+      startTime: "",
+      endTime: "",
+    });
+  };
+
+  const handlePlanModalClose = () => {
+    setIsPlanModalOpen(false);
+    setEventData({
+      name: "",
+      inviteCircle: "",
+      date: "",
+      duration: "",
+      startTime: "",
+      endTime: "",
+    });
+  };
+
+  const handleNext = (data: EventData) => {
     setEventData(data);
     setIsEventModalOpen(false);
     setIsPlanModalOpen(true);
+  };
+
+  const handleBack = () => {
+    setIsPlanModalOpen(false);
+    // Use setTimeout to ensure the PlanModal is closed before opening the EventModal
+    setTimeout(() => {
+      setIsEventModalOpen(true);
+    }, 0);
   };
 
   return (
@@ -105,10 +144,12 @@ export default function HomeClient({
         onClose={handleEventModalClose}
         onNext={handleNext}
         groups={groups}
+        initialData={eventData}
       />
       <PlanModal
         isOpen={isPlanModalOpen}
         onClose={handlePlanModalClose}
+        onBack={handleBack}
         eventData={eventData}
       />
     </div>

@@ -55,7 +55,7 @@ export default function Memories() {
                         .from("event")
                         .select(`
                             *,
-                            event_person_attendance!inner (
+                            event_person_attendance (
                                 attending,
                                 person (
                                     *
@@ -65,12 +65,20 @@ export default function Memories() {
                                 *
                             )
                         `)
-                        .eq("event_person_attendance.person_id", user.id)
                         .lt('end_timestamp', new Date().toISOString())
                         .order('start_timestamp', { ascending: false });
 
                     if (eventsError) throw eventsError;
-                    setEvents(eventsData.map((event) => ({
+
+                    // Filter events where the user was a participant
+                    const userEvents = eventsData.filter(event => 
+                        event.event_person_attendance.some(attendance => 
+                            attendance.person && attendance.person.person_id === user.id
+                        )
+                    );
+
+                    if (eventsError) throw eventsError;
+                    setEvents(userEvents.map((event) => ({
                         ...event,
                         event_person_attendance: event.event_person_attendance.map((attendance) => ({
                             attending: attendance.attending ?? false,
@@ -87,7 +95,7 @@ export default function Memories() {
                     })));
 
                     // Fetch images for each event
-                    const imagePromises = eventsData.map(async (event) => {
+                    const imagePromises = userEvents.map(async (event) => {
                         const response = await fetch(`/api/files?eventId=${event.event_id}`);
                         if (response.ok) {
                             const files = await response.json();

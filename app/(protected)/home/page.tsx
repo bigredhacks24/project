@@ -69,7 +69,7 @@ export default function Home() {
             .select(
               `
               *,
-              event_person_attendance!inner (
+              event_person_attendance (
                 attending,
                 person (
                   *
@@ -80,12 +80,19 @@ export default function Home() {
               )
             `
             )
-            .eq("event_person_attendance.person_id", user.id)
+            // .eq("event_person_attendance.person_id", user.id)
             .gte("start_timestamp", new Date().toISOString())
             .order("start_timestamp", { ascending: true });
           if (eventsError) throw eventsError;
+
+          const userEvents = eventsData.filter(event => 
+            event.event_person_attendance.some(attendance => 
+                attendance.person && attendance.person.person_id === user.id
+            )
+        );
+
           setEvents(
-            eventsData.map((event) => ({
+            userEvents.map((event) => ({
               ...event,
               event_person_attendance: event.event_person_attendance.map(
                 (attendance) => ({

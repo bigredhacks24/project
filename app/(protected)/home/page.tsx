@@ -5,7 +5,8 @@ import CirclesCard from "@/components/CirclesCard";
 import { EventAttendance, Friend, Group } from "@/types/general-types";
 import CreateCircleButton from "@/components/CreateCircleButton";
 import EventCarousel from "@/components/EventCarousel";
-
+import { Button } from "@/components/ui/button";
+import InviteFriendButton from "@/components/InviteFriendButton";
 interface EventWithAttendance {
   event_id: string;
   group_id: string | null;
@@ -85,17 +86,17 @@ export default async function Home() {
             {groups &&
               groups.map((group: Group) => (
                 <div key={group.group_id} className="w-[calc(33.333%-16px)]">
-                  <CirclesCard
-                    group={group}
-                    eventCount={0}
-                  />
+                  <CirclesCard group={group} eventCount={0} />
                 </div>
               ))}
           </div>
         </div>
         <div className="flex flex-col items-start gap-6 flex-[1_0_0]">
-          <div className="text-black font-roboto text-[36px] font-medium leading-[20.25px] tracking-[0.338px]">
-            Your Friends
+          <div className="flex items-center justify-between w-full">
+            <div className="text-black font-roboto text-[36px] font-medium leading-[20.25px] tracking-[0.338px]">
+              Your Friends
+            </div>
+            <InviteFriendButton />
           </div>
           <div className="flex flex-col items-start gap-[8px] self-stretch">
             {friends &&

@@ -2,6 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
+import { sendEmail } from "@/utils/email"; // You'll need to create this utility function
 
 // Fetch all groups user is part of or a specific group
 export async function GET(req: Request) {
@@ -10,21 +11,22 @@ export async function GET(req: Request) {
   const userId = url.searchParams.get("userId");
   const groupId = url.searchParams.get("groupId");
 
-  let query = supabase
-    .from("group_person")
-    .select(
-      `
+  let query = supabase.from("group_person").select(
+    `
       group:group_id(*), 
       person:person_id(full_name, email)
     `
-    );
+  );
 
   if (groupId) {
     query = query.eq("group_id", groupId);
   } else if (userId) {
     query = query.eq("person_id", userId);
   } else {
-    return NextResponse.json({ error: "Missing userId or groupId" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Missing userId or groupId" },
+      { status: 400 }
+    );
   }
 
   const { data, error } = await query;
@@ -48,33 +50,7 @@ Conditions:
 export async function POST(req: Request) {
   const supabase = createClient();
 
-  const { userId, groupName, personIds } = await req.json();
-
-  // Fetch the list of friends for the user creating the group
-  const { data: user, error: userError } = await supabase
-    .from("person")
-    .select("friends")
-    .eq("person_id", userId)
-    .single();
-
-  if (userError || !user) {
-    return NextResponse.json(
-      { error: "User not found or unable to fetch friends" },
-      { status: 400 }
-    );
-  }
-
-  // Validate that all members are friends of the user
-  const invalidFriends = personIds.filter(
-    (id: string) => user.friends && !user.friends.includes(id)
-  );
-
-  if (invalidFriends.length > 0) {
-    return NextResponse.json(
-      { error: "Some people are not your friends" },
-      { status: 400 }
-    );
-  }
+  const { userId, groupName, invitedPeople } = await req.json();
 
   // Create the group
   const { data: newGroup, error: groupError } = await supabase
@@ -88,15 +64,46 @@ export async function POST(req: Request) {
   }
 
   const groupPersonEntries = [
-    ...personIds.map((personId: string) => ({
-      group_id: newGroup.group_id,
-      person_id: personId,
-    })),
-    {
-      group_id: newGroup.group_id,
-      person_id: userId,
-    },
+    { group_id: newGroup.group_id, person_id: userId },
   ];
+
+  for (const person of invitedPeople) {
+    if (person.person_id) {
+      // Existing person
+      groupPersonEntries.push({
+        group_id: newGroup.group_id,
+        person_id: person.person_id,
+      });
+    } else {
+      // New person
+      const { data: newPerson, error: newPersonError } = await supabase
+        .from("person")
+        .insert({
+          full_name: person.full_name,
+          email: person.email,
+          person_id: crypto.randomUUID(),
+        })
+        .select("*")
+        .single();
+
+      if (newPersonError) {
+        console.error("Error creating new person:", newPersonError);
+        continue;
+      }
+
+      groupPersonEntries.push({
+        group_id: newGroup.group_id,
+        person_id: newPerson.person_id,
+      });
+
+      // Send invitation email
+      await sendEmail(
+        person.email,
+        "Join Circles!",
+        "You should join circles!"
+      );
+    }
+  }
 
   const { error: groupPersonError } = await supabase
     .from("group_person")

@@ -69,7 +69,7 @@ console.log("groups: " + groups?.length);
   }
 
   return (
-    <div className="flex w-full h-[881px] flex-col items-start gap-[72px] shrink-0">
+    <div className="flex w-full flex-col items-start gap-[72px] shrink-0">
       <div className="flex flex-col items-start gap-[24px] self-stretch">
         <div className="w-full flex flex-col items-start gap-6">
           <div className="flex p-2.5 justify-center items-center gap-2.5">
@@ -80,13 +80,14 @@ console.log("groups: " + groups?.length);
           <EventCarousel events={events} />
         </div>
       </div>
-      <div className="flex w-[1222px] items-start gap-9">
-        <div className="flex h-[291px] flex-col items-start gap-6 flex-[1_0_0]">
-          <div className="flex items-start gap-6">
-            <div className="text-black font-roboto text-[36px] font-medium leading-[20.25px] tracking-[0.338px]">
-              Your Circles
+      <div className="flex w-full items-start gap-9">
+      <div className="flex flex-col items-start gap-6 flex-[1_0_0]">
+      <div className="flex items-center justify-between w-full">
+          <div className="text-black font-roboto text-[36px] font-medium leading-[20.25px] tracking-[0.338px]">
+            Your Circles
             </div>
             <CreateCircleButton />
+
           </div>
           <div className="flex flex-wrap gap-4 w-full">
 

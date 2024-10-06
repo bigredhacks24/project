@@ -12,15 +12,37 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import Spinner from '@/components/Spinner';
 import type { EventWithAttendance } from '@/types/general-types';
 import InviteFriendButton from "@/components/InviteFriendButton";
+import EventModal from "@/components/EventModal";
+import PlanModal from "@/components/PlanModal";
+import EventModalButton from "@/components/EventModalButton";
+
+interface EventData {
+  name: string;
+  inviteCircle: string;
+  date: string;
+  duration: string;
+  startTime: string;
+  endTime: string;
+}
 
 export default function Home() {
   const [user, setUser] = useState<any>(null);
   const [events, setEvents] = useState<EventWithAttendance[]>([]);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
-  const [selectedEventWithAttendance, setselectedEventWithAttendance] = useState<EventWithAttendance | null>(null);
+  const [selectedEventWithAttendance, setSelectedEventWithAttendance] = useState<EventWithAttendance | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  const [eventData, setEventData] = useState<EventData>({
+    name: "",
+    inviteCircle: "",
+    date: "",
+    duration: "",
+    startTime: "",
+    endTime: "",
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -110,7 +132,42 @@ export default function Home() {
   }, []);
 
   const handleEventClick = (event: EventWithAttendance) => {
-    setselectedEventWithAttendance(event);
+    setSelectedEventWithAttendance(event);
+  };
+
+  const handleEventModalClose = () => {
+    setIsEventModalOpen(false);
+    setEventData({
+      name: "",
+      inviteCircle: "",
+      date: "",
+      duration: "",
+      startTime: "",
+      endTime: "",
+    });
+  };
+
+  const handlePlanModalClose = () => {
+    setIsPlanModalOpen(false);
+    setEventData({
+      name: "",
+      inviteCircle: "",
+      date: "",
+      duration: "",
+      startTime: "",
+      endTime: "",
+    });
+  };
+
+  const handleNext = (data: EventData) => {
+    setEventData(data);
+    setIsEventModalOpen(false);
+    setIsPlanModalOpen(true);
+  };
+
+  const handleBack = () => {
+    setIsPlanModalOpen(false);
+    setIsEventModalOpen(true);
   };
 
   if (isLoading) {
@@ -129,10 +186,11 @@ export default function Home() {
     <div className="flex w-full h-[881px] flex-col items-start gap-[72px] shrink-0">
       <div className="flex flex-col items-start gap-[24px] self-stretch">
         <div className="w-full flex flex-col items-start gap-6">
-          <div className="flex p-2.5 justify-center items-center gap-2.5">
+          <div className="flex justify-between items-center">
             <div className="text-black font-roboto text-[36px] font-medium leading-[20.25px] tracking-[0.338px]">
               Upcoming Events
             </div>
+            <EventModalButton onOpen={() => setIsEventModalOpen(true)} />
           </div>
           <EventCarousel events={events} onEventClick={handleEventClick} />
         </div>
@@ -178,7 +236,7 @@ export default function Home() {
           </div>
         </div>
 
-        <Dialog open={!!selectedEventWithAttendance} onOpenChange={() => setselectedEventWithAttendance(null)}>
+        <Dialog open={!!selectedEventWithAttendance} onOpenChange={() => setSelectedEventWithAttendance(null)}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Event Files</DialogTitle>
@@ -187,6 +245,19 @@ export default function Home() {
           </DialogContent>
         </Dialog>
       </div>
+      <EventModal
+        isOpen={isEventModalOpen}
+        onClose={handleEventModalClose}
+        onNext={handleNext}
+        groups={groups}
+        initialData={eventData}
+      />
+      <PlanModal
+        isOpen={isPlanModalOpen}
+        onClose={handlePlanModalClose}
+        onBack={handleBack}
+        eventData={eventData}
+      />
     </div>
   );
 }

@@ -222,13 +222,13 @@ export default function Home() {
       </div>
       <div className="w-[1222px] items-start gap-9 grid grid-cols-2">
         <div>
-          <div className="flex items-start gap-6">
+          <div className="flex items-center gap-6">
             <div className="text-black font-roboto text-[36px] font-medium leading-[20.25px] tracking-[0.338px]">
               Your Circles
             </div>
             <CreateCircleButton />
           </div>
-          <div className="flex overflow-x-scroll gap-x-4 w-full mt-[45px]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full mt-[45px]">
             {groups &&
               groups.map((group: Group) => (
                 <div key={group.group_id}>

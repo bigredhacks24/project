@@ -1,5 +1,3 @@
-// app/api/groups.ts
-
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 import { sendEmail } from "@/utils/email"; // You'll need to create this utility function

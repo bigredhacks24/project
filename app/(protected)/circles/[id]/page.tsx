@@ -33,6 +33,15 @@ interface AvailabilityBlock {
   start: Date;
   end: Date;
 }
+
+type SecondDegreeConnection = {
+  person_id: string;
+  full_name: string;
+  email: string;
+  profile_picture: string | null;
+  connection_count: number;
+};
+
 export default function CirclePage() {
   const { id } = useParams();
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
@@ -55,6 +64,9 @@ export default function CirclePage() {
     description: "",
     allowPlusOne: false,
   });
+  const [isCalculating, setIsCalculating] = useState(false);
+  const [suggestedPlusOne, setSuggestedPlusOne] = useState<SecondDegreeConnection | null>(null);
+  const router = useRouter();
 
   let lastFetchedID = "";
 
@@ -303,13 +315,39 @@ export default function CirclePage() {
       const start_timestamp = new Date(`${date}T${start_time}`).toISOString();
       const end_timestamp = new Date(`${date}T${end_time}`).toISOString();
 
+      let targetGroupId = id;
+
+      if (newEvent.allowPlusOne && suggestedPlusOne) {
+        const newMembers = [...(circle?.members.map(m => m.person_id) || []), suggestedPlusOne.person_id];
+        const newGroupName = `${circle?.name} + ${suggestedPlusOne.full_name}`;
+
+        const response = await fetch("/api/groups/find", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ members: newMembers, name: newGroupName }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to find or create group");
+        }
+
+        const { group, created } = await response.json();
+        targetGroupId = group.group_id;
+
+        if (created) {
+          console.log("New group created:", group);
+        } else {
+          console.log("Existing group found:", group);
+        }
+      }
+
       const response = await fetch("/api/events", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          groupId: id,
+          groupId: targetGroupId,
           ...restEventData,
           start_timestamp,
           end_timestamp,
@@ -322,32 +360,6 @@ export default function CirclePage() {
 
       const { event: createdEvent } = await response.json();
 
-      // Update the state with the new event
-      setPageData((prevData) => {
-        const now = new Date();
-        const isUpcoming = new Date(createdEvent.start_timestamp) > now;
-
-        if (isUpcoming) {
-          return {
-            ...prevData,
-            upcomingEvents: [...prevData.upcomingEvents, createdEvent].sort(
-              (a, b) =>
-                new Date(a.start_timestamp).getTime() -
-                new Date(b.start_timestamp).getTime()
-            ),
-          };
-        } else {
-          return {
-            ...prevData,
-            pastEvents: [...prevData.pastEvents, createdEvent].sort(
-              (a, b) =>
-                new Date(b.end_timestamp).getTime() -
-                new Date(a.end_timestamp).getTime()
-            ),
-          };
-        }
-      });
-
       // Reset form
       setNewEvent({
         name: "",
@@ -357,6 +369,11 @@ export default function CirclePage() {
         description: "",
         allowPlusOne: false,
       });
+
+      // Redirect to the new group page if a new group was created
+      if (targetGroupId !== id) {
+        router.push(`/circles/${targetGroupId}`);
+      }
     } catch (error) {
       console.error("Error creating event:", error);
     }
@@ -417,6 +434,83 @@ View more at <a href="https://findcircles.co/group/${circle.group_id}">Circles</
       .join("\n\n");
   };
 
+  const handlePlusOneChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const isChecked = e.target.checked;
+    setNewEvent((prev) => ({ ...prev, allowPlusOne: isChecked }));
+
+    if (isChecked) {
+      setIsCalculating(true);
+      try {
+        const suggestedPerson = await calculateMostCommonSecondDegreeConnection();
+        setSuggestedPlusOne(suggestedPerson);
+      } catch (error) {
+        console.error("Error calculating suggested plus one:", error);
+      } finally {
+        setIsCalculating(false);
+      }
+    } else {
+      setSuggestedPlusOne(null);
+    }
+  };
+
+  const calculateMostCommonSecondDegreeConnection = async (): Promise<SecondDegreeConnection> => {
+    // This function will be implemented in the API
+    const response = await fetch(`/api/second-degree-connections?groupId=${id}`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch second-degree connections");
+    }
+    const data = await response.json();
+    return data.mostCommonConnection;
+  };
+
+  const handleCreateEventWithPlusOne = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!suggestedPlusOne) return;
+
+    try {
+      // Create a new group with the suggested plus one
+      const newGroupResponse = await fetch("/api/groups/find", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: `${circle?.name} + ${suggestedPlusOne.full_name}`,
+          members: [...(circle?.members ?? []), suggestedPlusOne.person_id],
+        }),
+      });
+
+      if (!newGroupResponse.ok) {
+        throw new Error("Failed to create new group");
+      }
+
+      const { group: newGroup } = await newGroupResponse.json();
+
+      // Create the event for the new group
+      const { date, start_time, end_time, ...restEventData } = newEvent;
+      const start_timestamp = new Date(`${date}T${start_time}`).toISOString();
+      const end_timestamp = new Date(`${date}T${end_time}`).toISOString();
+
+      const eventResponse = await fetch("/api/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          groupId: newGroup.group_id,
+          ...restEventData,
+          start_timestamp,
+          end_timestamp,
+        }),
+      });
+
+      if (!eventResponse.ok) {
+        throw new Error("Failed to create event");
+      }
+
+      // Redirect to the new group page
+      router.push(`/circles/${newGroup.group_id}`);
+    } catch (error) {
+      console.error("Error creating event with plus one:", error);
+    }
+  };
+
   if (isLoading) {
     return <Spinner />;
   }
@@ -447,7 +541,7 @@ View more at <a href="https://findcircles.co/group/${circle.group_id}">Circles</
 
             <div className="flex flex-col gap-y-8">
               <div>
-                <h2 className="text-base font-semibold mb-2 uppercase">
+                <h2 className="text-base font-semibold mb-2 uppercase colored">
                   Upcoming Events
                 </h2>
                 <div className="mb-6">
@@ -479,7 +573,7 @@ View more at <a href="https://findcircles.co/group/${circle.group_id}">Circles</
               </div>
 
               <div>
-                <h2 className="text-base font-semibold mb-2 uppercase">
+                <h2 className="text-base font-semibold mb-2 uppercase colored">
                   Suggested Events
                 </h2>
                 {recommendations.map((recommendation, index) => (
@@ -514,7 +608,7 @@ View more at <a href="https://findcircles.co/group/${circle.group_id}">Circles</
               </div>
 
               <div>
-                <h2 className="text-base font-semibold mb-2 uppercase">
+                <h2 className="text-base font-semibold mb-2 uppercase colored">
                   Plan Event
                 </h2>
                 <div>
@@ -522,7 +616,7 @@ View more at <a href="https://findcircles.co/group/${circle.group_id}">Circles</
                   <p className="text-base text-[#9C9C9C] mb-2">
                     Choose based on your availabilities and recommendations.
                   </p>
-                  <form onSubmit={handleCreateEvent} className="space-y-4">
+                  <form onSubmit={newEvent.allowPlusOne ? handleCreateEventWithPlusOne : handleCreateEvent} className="space-y-4">
                     <div>
                       <label className="block text-base font-medium mb-1">
                         Event Name
@@ -595,15 +689,34 @@ View more at <a href="https://findcircles.co/group/${circle.group_id}">Circles</
                         id="allowPlusOne"
                         name="allowPlusOne"
                         checked={newEvent.allowPlusOne}
-                        onChange={handleInputChange}
+                        onChange={handlePlusOneChange}
                         className="mr-2"
                       />
                       <label htmlFor="allowPlusOne" className="text-base">
-                        Guests can bring a plus one
+                        Find us a new friend!
                       </label>
                     </div>
+                    {isCalculating && <Spinner />}
+                    {suggestedPlusOne && (
+                      <div className="mt-4 p-4 border rounded">
+                        <h4 className="text-lg font-medium mb-2">Suggested Plus One</h4>
+                        <div className="flex items-center">
+                          <img
+                            src={suggestedPlusOne.profile_picture || "https://avatar.iran.liara.run/public"}
+                            alt={suggestedPlusOne.full_name}
+                            className="w-10 h-10 rounded-full mr-3"
+                          />
+                          <div>
+                            <p className="font-medium">{suggestedPlusOne.full_name}</p>
+                            <p className="text-sm text-gray-500">{suggestedPlusOne.email}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     <div className="flex gap-x-2">
-                      <Button type="submit">Create Event</Button>
+                      <Button type="submit">
+                        {newEvent.allowPlusOne ? "Create Event with Plus One" : "Create Event"}
+                      </Button>
                     </div>
                   </form>
                 </div>
@@ -612,7 +725,7 @@ View more at <a href="https://findcircles.co/group/${circle.group_id}">Circles</
           </div>
 
           <div className="lg:mt-[0.85rem]">
-            <h2 className="text-base font-semibold mb-2 uppercase">
+            <h2 className="text-base font-semibold mb-2 uppercase colored">
               Availability Notifications
             </h2>
             <div className="mb-6 flex justify-between items-center">
@@ -630,7 +743,7 @@ View more at <a href="https://findcircles.co/group/${circle.group_id}">Circles</
               </Button>
             </div>
 
-            <h2 className="text-base font-semibold mb-2 uppercase">
+            <h2 className="text-base font-semibold mb-2 uppercase colored">
               Common Availability
             </h2>
             <WeeklyCalendar

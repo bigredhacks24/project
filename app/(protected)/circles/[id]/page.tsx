@@ -368,7 +368,7 @@ export default function CirclePage() {
                                         </p>
                                         <form onSubmit={handleCreateEvent} className="space-y-4">
                                             <div>
-                                                <label className="block text-base font-medium mb-1">
+                                                <label className="block text-base font-medium mb-2">
                                                     Event Name
                                                 </label>
                                                 <input
@@ -381,7 +381,7 @@ export default function CirclePage() {
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-base font-medium mb-1">
+                                                <label className="block text-base font-medium mb-2">
                                                     Date
                                                 </label>
                                                 <input
@@ -395,7 +395,7 @@ export default function CirclePage() {
                                             </div>
                                             <div className="flex space-x-4">
                                                 <div className="flex-1">
-                                                    <label className="block text-base font-medium mb-1">
+                                                    <label className="block text-base font-medium mb-2">
                                                         Start Time
                                                     </label>
                                                     <input
@@ -408,7 +408,7 @@ export default function CirclePage() {
                                                     />
                                                 </div>
                                                 <div className="flex-1">
-                                                    <label className="block text-base font-medium mb-1">
+                                                    <label className="block text-base font-medium mb-2">
                                                         End Time
                                                     </label>
                                                     <input
@@ -422,7 +422,7 @@ export default function CirclePage() {
                                                 </div>
                                             </div>
                                             <div>
-                                                <label className="block text-base font-medium mb-1">
+                                                <label className="block text-base font-medium mb-2">
                                                     Event Description
                                                 </label>
                                                 <textarea

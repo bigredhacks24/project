@@ -116,7 +116,7 @@ export default function PlanModal({
             </DialogHeader>
             <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Date
                 </label>
                 <Input
@@ -126,7 +126,7 @@ export default function PlanModal({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Time
                 </label>
                 <div className="flex space-x-2">
@@ -143,7 +143,7 @@ export default function PlanModal({
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Choose activity (based on your shared interests)
                 </label>
                 <Select onValueChange={setActivity}>
@@ -154,7 +154,7 @@ export default function PlanModal({
                 </Select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Event Description
                 </label>
                 <Textarea
@@ -173,7 +173,7 @@ export default function PlanModal({
                 />
                 <label
                   htmlFor="guestsPlusOne"
-                  className="text-sm font-medium text-gray-700"
+                  className="text-sm font-medium text-gray-700 mb-2"
                 >
                   Guests can bring a plus one
                 </label>

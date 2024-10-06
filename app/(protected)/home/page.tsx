@@ -243,14 +243,11 @@ export default function Home() {
         </div>
         <div>
           <div className="flex flex-col h-[400px]">
-            <div
-              className="flex items-center justify-start w-full mb-4"
-              style={{ marginLeft: "12px" }}
-            >
+            <div className="flex items-center justify-start w-full mb-4">
               <div className="text-black font-roboto text-[36px] font-medium leading-[20.25px] tracking-[0.338px]">
                 Your Friends
               </div>
-              <div style={{ marginLeft: "12px" }}>
+              <div style={{ marginLeft: "25px" }}>
                 <InviteFriendButton />
               </div>
             </div>
